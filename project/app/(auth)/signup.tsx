@@ -2,19 +2,31 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 
-export default function Login() {
+export default function SignUp() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState(''); // State for the phone number input
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleLogin = async () => {
-    // TODO: Implement login logic
-    router.replace('/(tabs)');
+  const handleSignUp = async () => {
+    // TODO: Implement sign-up logic
+    alert(`Sign-up successful for ${name}!`);
+    router.replace('/(auth)/login'); // Redirect to login after sign-up
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>CrimeWatch</Text>
+      <Text style={styles.title}>{name ? `Hello, ${name}!` : 'Sign Up'}</Text>
       <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="Name"
+          placeholderTextColor="#888"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+        />
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -26,18 +38,34 @@ export default function Login() {
         />
         <TextInput
           style={styles.input}
+          placeholder="Phone Number"
+          placeholderTextColor="#888"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad" // Use phone-pad keyboard for numeric input
+        />
+        <TextInput
+          style={styles.input}
           placeholder="Password"
           placeholderTextColor="#888"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          placeholderTextColor="#888"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-        <Text style={styles.link}>Don't have an account? Sign Up</Text>
+      <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
+        <Text style={styles.link}>Already have an account? Login</Text>
       </TouchableOpacity>
     </View>
   );

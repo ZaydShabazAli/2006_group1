@@ -1,4 +1,5 @@
 import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const dummyAlerts = [
   { id: '1', type: 'Theft', location: 'Orchard Road', time: '2 hours ago' },
@@ -7,7 +8,7 @@ const dummyAlerts = [
 
 export default function AlertsScreen() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Recent Alerts</Text>
       <FlatList
         data={dummyAlerts}
@@ -20,7 +21,7 @@ export default function AlertsScreen() {
           </View>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
