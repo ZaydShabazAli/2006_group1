@@ -6,6 +6,9 @@ export default function ProfileScreen() {
   const handleLogout = () => {
     router.replace('/(auth)/login');
   };
+  const SubmitFeedback = () => {
+    router.replace('/(tabs)/feedback');
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -21,7 +24,9 @@ export default function ProfileScreen() {
           <Text style={styles.label}>Phone</Text>
           <Text style={styles.value}>+65 9123 4567</Text>
         </View>
-
+        <TouchableOpacity style={styles.logoutButton} onPress={SubmitFeedback}>
+          <Text style={styles.logoutText}>Submit Feedback</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
