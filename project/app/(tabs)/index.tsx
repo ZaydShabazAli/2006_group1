@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal, Button } from 'react-native';
 import { MapPin, ShieldPlus, Briefcase, Shield, DollarSign, MoreHorizontal, ChevronLeft } from 'lucide-react-native';
 import * as Location from 'expo-location'; // Import expo-location
+import TheftIcon from '../../assets/crime_icons/theft';
+import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty'; 
+import RobberyIcon from '../../assets/crime_icons/robbery'; 
+import OthersIcon from '../../assets/crime_icons/others'; 
+
 
 export default function ReportScreen() {
   const [location, setLocation] = useState<string>('Fetching location...'); // State for the location
@@ -9,10 +14,10 @@ export default function ReportScreen() {
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null); // State for selected button
 
   const buttons = [
-    { id: '1', title: 'Outrage of Modesty', icon: <Shield size={48} color="#fff" />, color: '#F44336' }, //red
-    { id: '2', title: 'Snatch Theft', icon: <Briefcase size={48} color="#fff" />, color: '#4CAF50' }, //green
-    { id: '3', title: 'Robbery', icon: <DollarSign size={48} color="#fff" />, color: '#2196F3' }, //blue
-    { id: '4', title: 'Others', icon: <MoreHorizontal size={48} color="#fff" />, color: '#00BCD4' }, //cyan
+    { id: '1', title: 'Outrage of Modesty', icon: <OutrageOFModestyIcon size={70} color="#fff" />, color: '#F44336' }, //red
+    { id: '2', title: 'Snatch Theft', icon: <TheftIcon size={60} color="#fff" />, color: '#4CAF50' }, //green
+    { id: '3', title: 'Robbery', icon: <RobberyIcon size={60} color="#fff" />, color: '#2196F3' }, //blue
+    { id: '4', title: 'Others', icon: <OthersIcon size={60} color="#fff" />, color: '#00BCD4' }, //cyan
   ];
 
   const handleButtonPress = (title: string, color: string, icon?: JSX.Element) => {
@@ -115,7 +120,7 @@ export default function ReportScreen() {
 
           {selectedButton?.icon && (
             <View style={styles.modalIcon}>
-              {React.cloneElement(selectedButton.icon, { size: 96 })}
+              {React.cloneElement(selectedButton.icon, { size: 250 })}
             </View>
           )}
 
