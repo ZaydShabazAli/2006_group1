@@ -258,10 +258,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 4, // Added spacing between headings
+    textAlign: 'center',
   },
   reportSubheading: {
     fontSize: 14,
     color: '#fff',
     marginBottom: 24, // Added spacing between subheadings
+    textAlign: 'center',
   },
 });
