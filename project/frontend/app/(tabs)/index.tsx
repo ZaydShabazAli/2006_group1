@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
 import { MapPin, ShieldPlus, ChevronLeft } from 'lucide-react-native';
-import { useLocation } from './map'; // Ensure the import path is correct
+import { LocationContext } from '../context/locationContext'; // Ensure the import path is correct
 import TheftIcon from '../../assets/crime_icons/theft';
 import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty';
 import RobberyIcon from '../../assets/crime_icons/robbery';
 import OthersIcon from '../../assets/crime_icons/others';
 
 export default function ReportScreen() {
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null); // Manage location state locally
+  const { location } = useContext(LocationContext); // Access location from context
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
 
@@ -50,7 +50,7 @@ export default function ReportScreen() {
               <Text style={styles.locationTitle}>My Current Location</Text>
               <Text style={styles.locationText}>
                 {location
-                  ? `${location.latitude}, ${location.longitude}`
+                  ? `${location.name}` // Use location from context
                   : 'Fetching location...'}
               </Text>
             </View>
@@ -102,10 +102,10 @@ export default function ReportScreen() {
             
             <Text style={styles.reportHeading}>
               {location
-                ? `${location.latitude}, ${location.longitude}`
+                ? `${location.name}` // Use location from context
                 : 'Fetching location...'}
             </Text>
-            <Text style={styles.reportSubheading}>Date and Time</Text>
+            <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
             <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
             <Text style={styles.reportSubheading}>Distance away</Text>
           </View>

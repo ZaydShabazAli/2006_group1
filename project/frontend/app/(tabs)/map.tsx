@@ -1,20 +1,12 @@
-import { useEffect, useState, useRef, createContext, useContext } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
 import MapView, { Marker, MapPressEvent } from 'react-native-maps';
+import { useLocation } from '../context/locationContext'; // Correct import path
 import * as Location from 'expo-location';
 
-// Create a context for location
-const LocationContext = createContext<{
-  location: { latitude: number; longitude: number } | null;
-  setLocation: React.Dispatch<React.SetStateAction<{ latitude: number; longitude: number } | null>>;
-}>({ location: null, setLocation: () => {} });
-
-// Custom hook to use the LocationContext
-export const useLocation = () => useContext(LocationContext);
- 
-// Custom hook to get the user's initial live location
-export const useUserLocation = () => {
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+export default function MapScreen() {
+  const { location, setLocation } = useLocation(); // Use location from context
+  const mapRef = useRef<MapView>(null); // Reference to the MapView
 
   useEffect(() => {
     (async () => {
@@ -29,76 +21,85 @@ export const useUserLocation = () => {
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       };
-      setLocation(coords); // Set the user's live location
+      setLocation(coords); // Set the user's live location in context
     })();
   }, []);
 
-  return location; // Only return the initial live location
-};
-
-export default function MapScreen() {
-  const initialLocation = useUserLocation(); // Get the user's initial live location
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null); // Manage location state locally
-  const mapRef = useRef<MapView>(null); // Reference to the MapView
-
-  useEffect(() => {
-    if (initialLocation) {
-      setLocation(initialLocation); // Set the initial location
-    }
-  }, [initialLocation]);
-
-  const handleMapPress = (event: MapPressEvent) => {
+  const handleMapPress = async (event: MapPressEvent) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     const newLocation = { latitude, longitude };
-    setLocation(newLocation); // Update the context location
-    console.log('New location:', newLocation); // Log the new location directly
+
+    try {
+      const [address] = await Location.reverseGeocodeAsync(newLocation);
+      const locationName = address ? `${address.name}, ${address.city}` : 'Unknown Location';
+      setLocation({ ...newLocation, name: locationName }); // Update location with name
+      console.log('New location:', { ...newLocation, name: locationName });
+    } catch (error) {
+      console.error('Error fetching location name:', error);
+      setLocation({ ...newLocation, name: 'Unknown Location' });
+    }
+
     mapRef.current?.animateToRegion({
       ...newLocation,
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
-    }); // Smoothly animate the map to the new location
+    });
   };
 
-  const resetToDefaultLocation = () => {
-    if (initialLocation) {
-      setLocation(initialLocation); // Reset the location to the initial live location
-      mapRef.current?.animateToRegion({
-        ...initialLocation,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      }); // Smoothly animate the map to the initial location
-      console.log('Default location:', initialLocation); // Log the initial location directly
-    } else {
-      Alert.alert('Location not available', 'Unable to reset to your current location.');
+  const resetToDefaultLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission denied', 'Location permission is required to reset location.');
+      return;
     }
+  
+    let currentLocation = await Location.getCurrentPositionAsync({});
+    let coords = {
+      latitude: currentLocation.coords.latitude,
+      longitude: currentLocation.coords.longitude,
+    };
+
+    try {
+      const [address] = await Location.reverseGeocodeAsync(coords);
+      const locationName = address ? `${address.name}, ${address.city}` : 'Unknown Location';
+      setLocation({ ...coords, name: locationName }); // Update location with name
+      console.log('Live location:', { ...coords, name: locationName });
+    } catch (error) {
+      console.error('Error fetching location name:', error);
+      setLocation({ ...coords, name: 'Unknown Location' });
+    }
+
+    mapRef.current?.animateToRegion({
+      ...coords,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
   };
 
   return (
-    <LocationContext.Provider value={{ location, setLocation }}>
-      <View style={styles.container}>
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={{
-            latitude: initialLocation?.latitude || 1.3521, // Default to Singapore initially
-            longitude: initialLocation?.longitude || 103.8198,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          onPress={handleMapPress}
-        >
-          {location && (
-            <Marker
-              coordinate={location}
-              title="Selected Location"
-            />
-          )}
-        </MapView>
-        <TouchableOpacity style={styles.resetButton} onPress={resetToDefaultLocation}>
-          <Text style={styles.resetButtonText}>↺</Text>
-        </TouchableOpacity>
-      </View>
-    </LocationContext.Provider>
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={{
+          latitude: location?.latitude || 1.3521, // Default to Singapore initially
+          longitude: location?.longitude || 103.8198,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+        onPress={handleMapPress}
+      >
+        {location && (
+          <Marker
+            coordinate={location}
+            title="Selected Location"
+          />
+        )}
+      </MapView>
+      <TouchableOpacity style={styles.resetButton} onPress={resetToDefaultLocation}>
+        <Text style={styles.resetButtonText}>↺</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
