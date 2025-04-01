@@ -4,7 +4,7 @@ import * as Location from 'expo-location'; // Import expo-location
 // Define the context with default values
 export const LocationContext = createContext<{
   location: { latitude: number; longitude: number; name: string } | null;
-  setLocation: React.Dispatch<React.SetStateAction<{ latitude: number; longitude: number; name: string } | null>>;
+  setLocation: React.Dispatch<React.SetStateAction<{ latitude: number; longitude; number; name: string } | null>>;
 }>({
   location: null,
   setLocation: () => {},
@@ -29,17 +29,25 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
           longitude: currentLocation.coords.longitude,
         });
 
+        const detailedLocationName = [
+          reverseGeocode.name, // Street name or specific location
+          reverseGeocode.street, // Street
+          reverseGeocode.country, // Country
+        ]
+          .filter(Boolean) // Remove undefined or null values
+          .join(", "); // Join with commas for a detailed name
+
         setLocation({
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
-          name: reverseGeocode.city || reverseGeocode.region || reverseGeocode.country || "Unknown Location",
+          name: detailedLocationName || "Unknown Location",
         });
       } catch (error) {
         console.error("Error fetching location:", error);
       }
     };
 
-    fetchLocation();
+    fetchLocation(); // Fetch location on component mount
   }, []);
 
   return (
@@ -50,3 +58,5 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useLocation = () => useContext(LocationContext);
+
+export default LocationProvider;

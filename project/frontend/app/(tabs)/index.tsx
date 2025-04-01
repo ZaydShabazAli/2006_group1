@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
 import { MapPin, ShieldPlus, ChevronLeft } from 'lucide-react-native';
 import { LocationContext } from '../context/locationContext'; // Ensure the import path is correct
+import { useNavigation } from '@react-navigation/native'; // Import navigation hook
 import TheftIcon from '../../assets/crime_icons/theft';
 import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty';
 import RobberyIcon from '../../assets/crime_icons/robbery';
@@ -9,6 +10,7 @@ import OthersIcon from '../../assets/crime_icons/others';
 
 export default function ReportScreen() {
   const { location } = useContext(LocationContext); // Access location from context
+  const navigation = useNavigation(); // Initialize navigation
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
 
@@ -43,7 +45,10 @@ export default function ReportScreen() {
             </TouchableOpacity>
           )}
         />
-        <View style={styles.locationContainer}>
+        <TouchableOpacity
+          style={styles.locationContainer}
+          onPress={() => navigation.navigate('(tabs)', { screen: 'map' })} // Redirect to the map stack
+        >
           <View style={styles.locationRow}>
             <MapPin size={32} color="#007AFF" style={styles.icon} />
             <View>
@@ -55,7 +60,7 @@ export default function ReportScreen() {
               </Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
         <View style={styles.locationContainer}>
           <View style={styles.locationRow}>
             <ShieldPlus size={32} color="#007AFF" style={styles.icon} />
@@ -107,7 +112,7 @@ export default function ReportScreen() {
             </Text>
             <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
             <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
-            <Text style={styles.reportSubheading}>Distance away</Text>
+            <Text style={styles.reportSubheading}>Approx distance away</Text>
           </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>
@@ -236,7 +241,7 @@ const styles = StyleSheet.create({
   },
   confirmGroup: {
     alignItems: 'center', // Center the text and button horizontally
-    marginTop: 25, // Add spacing from the elements above
+    marginTop: 16, // Add spacing from the elements above
   },
   horizontalLine: {
     height: 1.5,
@@ -257,6 +262,6 @@ const styles = StyleSheet.create({
   reportSubheading: {
     fontSize: 14,
     color: '#fff',
-    marginBottom: 8, // Added spacing between subheadings
+    marginBottom: 24, // Added spacing between subheadings
   },
 });
