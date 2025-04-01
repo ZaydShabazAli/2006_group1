@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { MapPin, Bell, User, FileText } from 'lucide-react-native'; // Added FileText icon for Report
+import { MapPin, Bell, User, FileText, History } from 'lucide-react-native'; // Added History icon
 
 export default function TabLayout() {
   return (
@@ -27,10 +27,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="alerts"
+        name="history"
         options={{
-          title: 'Alerts',
-          tabBarIcon: ({ color, size }) => <Bell size={size} color={color} />,
+          title: 'History',
+          tabBarIcon: ({ color, size }) => <History size={size} color={color} />, // Updated to History icon
         }}
       />
       <Tabs.Screen

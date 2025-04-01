@@ -42,7 +42,6 @@ export default function Login() {
     <View style={styles.container}>
       <Text style={styles.title}>CrimeWatch</Text>
 
-      {/* Display error or success message */}
       {message && <Text style={styles.message}>{message}</Text>}
 
       <View style={styles.form}>

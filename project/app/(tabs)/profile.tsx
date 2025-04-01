@@ -24,11 +24,14 @@ export default function ProfileScreen() {
           <Text style={styles.label}>Phone</Text>
           <Text style={styles.value}>+65 9123 4567</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={SubmitFeedback}>
-          <Text style={styles.logoutText}>Submit Feedback</Text>
+        <TouchableOpacity style={styles.otherButton}>
+          <Text style={styles.buttonText}>Edit Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.otherButton} onPress={SubmitFeedback}>
+          <Text style={styles.buttonText}>Submit Feedback</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.buttonText}>Logout</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -62,14 +65,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 16,
   },
+  otherButton: {
+    backgroundColor: '#2196F3',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
   logoutButton: {
     backgroundColor: '#ff3b30',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 20,
   },
-  logoutText: {
+  buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',

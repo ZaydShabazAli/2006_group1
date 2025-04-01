@@ -1,59 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal, Button } from 'react-native';
-import { MapPin, ShieldPlus, Briefcase, Shield, DollarSign, MoreHorizontal, ChevronLeft } from 'lucide-react-native';
-import * as Location from 'expo-location'; // Import expo-location
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
+import { MapPin, ShieldPlus, ChevronLeft } from 'lucide-react-native';
+import { useLocation } from './map'; // Ensure the import path is correct
 import TheftIcon from '../../assets/crime_icons/theft';
-import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty'; 
-import RobberyIcon from '../../assets/crime_icons/robbery'; 
-import OthersIcon from '../../assets/crime_icons/others'; 
-
+import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty';
+import RobberyIcon from '../../assets/crime_icons/robbery';
+import OthersIcon from '../../assets/crime_icons/others';
 
 export default function ReportScreen() {
-  const [location, setLocation] = useState<string>('Fetching location...'); // State for the location
-  const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
-  const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null); // State for selected button
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null); // Manage location state locally
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
 
   const buttons = [
-    { id: '1', title: 'Outrage of Modesty', icon: <OutrageOFModestyIcon size={70} color="#fff" />, color: '#F44336' }, //red
-    { id: '2', title: 'Snatch Theft', icon: <TheftIcon size={60} color="#fff" />, color: '#4CAF50' }, //green
-    { id: '3', title: 'Robbery', icon: <RobberyIcon size={60} color="#fff" />, color: '#2196F3' }, //blue
-    { id: '4', title: 'Others', icon: <OthersIcon size={60} color="#fff" />, color: '#00BCD4' }, //cyan
+    { id: '1', title: 'Outrage of Modesty', icon: <OutrageOFModestyIcon size={70} color="#fff" />, color: '#F44336' },
+    { id: '2', title: 'Snatch Theft', icon: <TheftIcon size={60} color="#fff" />, color: '#4CAF50' },
+    { id: '3', title: 'Robbery', icon: <RobberyIcon size={60} color="#fff" />, color: '#2196F3' },
+    { id: '4', title: 'Others', icon: <OthersIcon size={60} color="#fff" />, color: '#00BCD4' },
   ];
 
   const handleButtonPress = (title: string, color: string, icon?: JSX.Element) => {
-    setSelectedButton({ title, color, icon }); // Set the selected button details
-    setModalVisible(true); // Show the modal
+    setSelectedButton({ title, color, icon });
+    setModalVisible(true);
   };
-
-  useEffect(() => {
-    const fetchLocation = async () => {
-      // Request location permissions
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocation('Permission to access location was denied.');
-        return;
-      }
-
-      // Get the current position
-      const currentLocation = await Location.getCurrentPositionAsync({});
-      const { latitude, longitude } = currentLocation.coords;
-
-      // Optionally, reverse geocode to get a human-readable address
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-
-      if (reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
-        setLocation(`${address.name}, ${address.city}, ${address.country}`);
-      } else {
-        setLocation(`Lat: ${latitude}, Lon: ${longitude}`);
-      }
-    };
-
-    fetchLocation();
-  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -66,7 +35,7 @@ export default function ReportScreen() {
           contentContainerStyle={styles.gridContainer}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: item.color }]} // Apply dynamic background color
+              style={[styles.button, { backgroundColor: item.color }]}
               onPress={() => handleButtonPress(item.title, item.color, item.icon)}
             >
               <Text style={styles.buttonText}>{item.title}</Text>
@@ -79,7 +48,11 @@ export default function ReportScreen() {
             <MapPin size={32} color="#007AFF" style={styles.icon} />
             <View>
               <Text style={styles.locationTitle}>My Current Location</Text>
-              <Text style={styles.locationText}>{location}</Text> 
+              <Text style={styles.locationText}>
+                {location
+                  ? `${location.latitude}, ${location.longitude}`
+                  : 'Fetching location...'}
+              </Text>
             </View>
           </View>
         </View>
@@ -107,7 +80,6 @@ export default function ReportScreen() {
         onRequestClose={() => setModalVisible(false)} // Close modal on back press
       >
         <View style={[styles.modalContainer, { backgroundColor: selectedButton?.color || '#fff' }]}>
-          {/* Back Button */}
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => setModalVisible(false)}
@@ -125,8 +97,18 @@ export default function ReportScreen() {
           )}
 
           <Text style={styles.modalTitle}>{selectedButton?.title}</Text>
-          
-          {/* Group Confirmation Text and Confirm Button */}
+          <View style={styles.horizontalLine} /> 
+          <View style={styles.reportDetailsGroup}>
+            
+            <Text style={styles.reportHeading}>
+              {location
+                ? `${location.latitude}, ${location.longitude}`
+                : 'Fetching location...'}
+            </Text>
+            <Text style={styles.reportSubheading}>Date and Time</Text>
+            <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
+            <Text style={styles.reportSubheading}>Distance away</Text>
+          </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>
             <TouchableOpacity
@@ -158,6 +140,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   gridContainer: {
+    marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -212,7 +195,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   modalText: {
     fontSize: 24, // Adjust font size for better alignment
@@ -249,11 +232,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalIcon: {
-    marginVertical: 50, // Add spacing around the icon
     alignItems: 'center', // Center the icon horizontally
   },
   confirmGroup: {
     alignItems: 'center', // Center the text and button horizontally
-    marginTop: 50, // Add spacing from the elements above
+    marginTop: 25, // Add spacing from the elements above
+  },
+  horizontalLine: {
+    height: 1.5,
+    backgroundColor: '#ccc', // Changed to a visible gray color
+    marginVertical: 8,
+    width: '80%',
+  },
+  reportDetailsGroup: {
+    alignItems: 'center',
+    marginTop: 20, // Adjusted spacing
+  },
+  reportHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4, // Added spacing between headings
+  },
+  reportSubheading: {
+    fontSize: 14,
+    color: '#fff',
+    marginBottom: 8, // Added spacing between subheadings
   },
 });
