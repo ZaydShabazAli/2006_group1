@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import axios from 'axios';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
 import { MapPin, ShieldPlus, ChevronLeft } from 'lucide-react-native';
 import { LocationContext } from '../context/locationContext'; // Ensure the import path is correct
@@ -7,6 +8,8 @@ import TheftIcon from '../../assets/crime_icons/theft';
 import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty';
 import RobberyIcon from '../../assets/crime_icons/robbery';
 import OthersIcon from '../../assets/crime_icons/others';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const ip = "192.168.0.103";
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -17,7 +20,7 @@ export default function ReportScreen() {
   const navigation = useNavigation<Nav>(); // Initialize navigation
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
-
+  const [message, setMessage] = useState<string | object>('');
   const buttons = [
     { id: '1', title: 'Outrage of Modesty', icon: <OutrageOFModestyIcon size={70} color="#fff" />, color: '#F44336' },
     { id: '2', title: 'Snatch Theft', icon: <TheftIcon size={60} color="#fff" />, color: '#4CAF50' },
@@ -25,10 +28,65 @@ export default function ReportScreen() {
     { id: '4', title: 'Others', icon: <OthersIcon size={60} color="#fff" />, color: '#00BCD4' },
   ];
 
-  const handleButtonPress = (title: string, color: string, icon?: JSX.Element) => {
-    setSelectedButton({ title, color, icon });
-    setModalVisible(true);
+const handleConfirmPress = async () => {
+  const fetchEmail = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        throw new Error("User not authenticated. Please log in.");
+      }
+  
+  const response = await axios.get<{ email: string }>(
+    `http://${ip}:8000/api/users/email`,
+    {
+      headers: {
+                'Authorization': `Bearer ${token}`, // Ensure token is dynamically retrieved
+      }
+    }
+  );
+  return response.data.email;
+    } catch (error: any) {
+      console.error("Error fetching email:", error);
+      throw new Error(error.response?.data?.msg || "Failed to fetch email.");
+    }
   };
+
+  let userEmail = '';
+  try {
+    userEmail = await fetchEmail();
+  } catch (error: any) {
+    setMessage(error.message || "An unknown error occurred.");
+    return;
+  }
+    if (selectedButton && location) {
+        try {
+            const payload = {
+                crime_type: selectedButton.title,
+                location: location.name,
+                email: userEmail, // Replace with actual user email
+                latitude: location.latitude,
+                longitude: location.longitude,
+            };
+            console.log('Payload being sent:', payload);
+            const token = await AsyncStorage.getItem('userToken');
+            if (!token) {
+                throw new Error("User not authenticated. Please log in.");
+            }
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            };
+            console.log('Headers being sent:', headers);
+            await axios.post(`http://${ip}:8000/api/crime-report`, payload, { headers });
+            alert('Crime report submitted successfully!');
+        } catch (error) {
+            console.log('Error submitting crime report:', error);
+            alert('Failed to submit crime report. Please try again.');
+        }
+    } else {
+        alert('Location or selected button data is not available.');
+    }
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -42,7 +100,10 @@ export default function ReportScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[styles.button, { backgroundColor: item.color }]}
-              onPress={() => handleButtonPress(item.title, item.color, item.icon)}
+              onPress={() => {
+                setSelectedButton({ title: item.title, color: item.color, icon: item.icon });
+                setModalVisible(true);
+              }}
             >
               <Text style={styles.buttonText}>{item.title}</Text>
               {item.icon}
@@ -51,8 +112,7 @@ export default function ReportScreen() {
         />
         <TouchableOpacity
           style={styles.locationContainer}
-          onPress={() => navigation.navigate('map')}
- // Redirect to the map stack
+          onPress={() => navigation.navigate('(tabs)', { screen: 'map' })} // Redirect to the map stack
         >
           <View style={styles.locationRow}>
             <MapPin size={32} color="#007AFF" style={styles.icon} />
@@ -121,12 +181,12 @@ export default function ReportScreen() {
           </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>
-            <TouchableOpacity
-              style={styles.confirmButton}
-              onPress={() => alert('Report submitted!')}
-            >
-              <Text style={styles.confirmButtonText}>Confirm</Text>
-            </TouchableOpacity>
+<TouchableOpacity
+    style={styles.confirmButton}
+    onPress={handleConfirmPress}
+>
+    <Text style={styles.confirmButtonText}>Confirm</Text>
+</TouchableOpacity>
           </View>
         </View>
       </Modal>

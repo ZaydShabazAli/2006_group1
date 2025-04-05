@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-na
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+const ip = "192.168.0.103";
 
 type User = {
   name: string;
@@ -21,7 +22,7 @@ export default function ProfileScreen() {
       if (!token) return;
 
       // Make an authenticated API request to get user details
-      const response = await axios.get<User>('http://192.168.0.102:8000/api/users', {
+      const response = await axios.get<User>(`http://${ip}:8000/api/users`, {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },

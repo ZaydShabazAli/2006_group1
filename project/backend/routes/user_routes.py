@@ -157,6 +157,45 @@ async def get_user_info(authorization: str = Header(...)):
         cursor.close()
         connection.close()
 
+@router.get("/api/users/email")
+async def get_user_info(authorization: str = Header(...)):
+    """Fetch user information based on the provided Authorization header"""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=400, detail="Invalid Authorization header format")
+
+    token = authorization.split("Bearer ")[1]
+    """Fetch user information based on the provided token"""
+    connection = get_db_connection()
+    if not connection:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = connection.cursor(dictionary=True)
+    try:
+        # Decode the JWT token to extract user ID
+        decoded_token = jwt.decode(token, os.getenv("JWT_SECRET", "your_jwt_secret"), algorithms=["HS256"])
+        user_id = decoded_token.get("userId")
+
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Invalid token")
+
+        # Fetch user details from the database
+        cursor.execute("SELECT id, name, email, phone FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {"email": user["email"]}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {e}")
+    finally:
+        cursor.close()
+        connection.close()
+
 @router.post("/api/users/login")
 async def login(user: UserLogin):
     """Route to log in a user"""

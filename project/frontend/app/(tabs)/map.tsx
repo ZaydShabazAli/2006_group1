@@ -21,7 +21,7 @@ export default function MapScreen() {
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       };
-      setLocation({ ...coords, name: 'Unknown Location', number: null }); // Set the user's live location in context
+setLocation({ ...coords, name: 'Unknown Location' }); // Set the user's live location in context
     })();
   }, []);
 
@@ -32,11 +32,11 @@ export default function MapScreen() {
     try {
       const [address] = await Location.reverseGeocodeAsync(newLocation);
       const locationName = address ? `${address.name}, ${address.city}` : 'Unknown Location';
-      setLocation({ ...newLocation, name: locationName, number: null }); // Update location with name and add number property
+setLocation({ ...newLocation, name: locationName }); // Update location with name
       console.log('New location:', { ...newLocation, name: locationName });
     } catch (error) {
       console.error('Error fetching location name:', error);
-      setLocation({ ...newLocation, name: 'Unknown Location', number: null });
+setLocation({ ...newLocation, name: 'Unknown Location' });
     }
 
     mapRef.current?.animateToRegion({
@@ -62,11 +62,11 @@ export default function MapScreen() {
     try {
       const [address] = await Location.reverseGeocodeAsync(coords);
       const locationName = address ? `${address.name}, ${address.city}` : 'Unknown Location';
-      setLocation({ ...coords, name: locationName, number: null }); // Update location with name and add number property
+setLocation({ ...coords, name: locationName }); // Update location with name
       console.log('Live location:', { ...coords, name: locationName });
     } catch (error) {
       console.error('Error fetching location name:', error);
-      setLocation({ ...coords, name: 'Unknown Location', number: null });
+setLocation({ ...coords, name: 'Unknown Location' });
     }
 
     mapRef.current?.animateToRegion({
