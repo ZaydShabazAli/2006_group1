@@ -1,29 +1,35 @@
-# main.py
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import user_routes
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from routes import user_routes  # Importing the user routes
 
 # Load environment variables from .env file
 load_dotenv()
 
+# Initialize FastAPI app
 app = FastAPI()
 
-# Allow all origins for now (you can restrict to frontend URL)
+# CORS Middleware Setup
+origins = [
+    "*",  # Allow all origins, adjust if needed for security
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change this later to your frontend address
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include your route files
+# Register the user routes
 app.include_router(user_routes.router)
 
-# Root route
-@app.get("/")
-def read_root():
-    return {"message": "Backend is up and running!"}
+# Getting the port from environment variables or defaulting to 3001
+port = os.getenv("PORT", 8000)
+
+# Run the FastAPI server (using `uvicorn` command for development)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000,reload=True)

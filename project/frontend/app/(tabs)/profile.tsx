@@ -1,29 +1,76 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+type User = {
+  name: string;
+  email: string;
+  phone: string;
+};
 
 export default function ProfileScreen() {
-  const handleLogout = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Fetch user info from the backend
+  const fetchUserInfo = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) return;
+
+      // Make an authenticated API request to get user details
+      const response = await axios.get<User>('http://192.168.0.102:8000/api/users', {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+        },
+      });
+
+      // Set user data from the API response
+      setUser(response.data);
+    } catch (error) {
+      console.error("Failed to load user info:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, []);
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('userToken');
     router.replace('/(auth)/login');
   };
+
   const SubmitFeedback = () => {
     router.replace('/(tabs)/feedback');
-  }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.title}>Profile</Text>
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>Name</Text>
-          <Text style={styles.value}>John Doe</Text>
 
-          <Text style={styles.label}>Email</Text>
-          <Text style={styles.value}>john@example.com</Text>
+        {loading ? (
+          <Text>Loading user info...</Text>
+        ) : user ? (
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Name</Text>
+            <Text style={styles.value}>{user.name}</Text>
 
-          <Text style={styles.label}>Phone</Text>
-          <Text style={styles.value}>+65 9123 4567</Text>
-        </View>
+            <Text style={styles.label}>Email</Text>
+            <Text style={styles.value}>{user.email}</Text>
+
+            <Text style={styles.label}>Phone</Text>
+            <Text style={styles.value}>{user.phone}</Text>
+          </View>
+        ) : (
+          <Text>Failed to load user information.</Text>
+        )}
+
         <TouchableOpacity style={styles.otherButton}>
           <Text style={styles.buttonText}>Edit Profile</Text>
         </TouchableOpacity>

@@ -8,9 +8,13 @@ import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty';
 import RobberyIcon from '../../assets/crime_icons/robbery';
 import OthersIcon from '../../assets/crime_icons/others';
 
+type Nav = {
+  navigate: (value: string, options?: { screen: string }) => void;
+};
+
 export default function ReportScreen() {
   const { location } = useContext(LocationContext); // Access location from context
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation<Nav>(); // Initialize navigation
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
 
@@ -47,7 +51,8 @@ export default function ReportScreen() {
         />
         <TouchableOpacity
           style={styles.locationContainer}
-          onPress={() => navigation.navigate('(tabs)', { screen: 'map' })} // Redirect to the map stack
+          onPress={() => navigation.navigate('map')}
+ // Redirect to the map stack
         >
           <View style={styles.locationRow}>
             <MapPin size={32} color="#007AFF" style={styles.icon} />

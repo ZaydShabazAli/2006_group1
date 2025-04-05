@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios'; // Import axios for HTTP requests
+import AsyncStorage from '@react-native-async-storage/async-storage';
+type CheckUserResponse = {
+  exists: boolean;
+};
+
+type LoginResponse = {
+  token: string;
+};
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,16 +23,31 @@ export default function Login() {
     }
 
     try {
-      // Send login request to backend
-      const response = await axios.post("http://192.168.0.101:3001/api/users/login", {
-        email,
-        password,
-      });
+      const checkUserResponse = await axios.post<CheckUserResponse>(
+        "http://192.168.0.102:8000/api/users/check2", 
+        { email },
+        { timeout: 5000 } // Add timeout
+        
+      );
 
-      // Assuming the server sends the token back on successful login
+  
+      if (!checkUserResponse.data.exists) {
+        alert('User does not exist! Please sign up!');
+        return;
+      }
+      // Send login request to backend
+      const response = await axios.post<LoginResponse>(
+        "http://192.168.0.102:8000/api/users/login",
+        { email, password },
+        { timeout: 5000 }
+      );
+
+      // Now TypeScript knows that 'token' exists on 'response.data'
+      console.log("Login response:", response.data);
       const { token } = response.data;
 
       // Store the token (you can use async storage, context, or redux to save the token)
+      await AsyncStorage.setItem('userToken', token);
       // For now, we're just logging it to the console
       console.log("Login successful, token:", token);
 
@@ -32,8 +55,16 @@ export default function Login() {
       router.replace('/(tabs)');  // Adjust this to your main screen or home page
 
     } catch (error: any) {
-      // Handle errors from the server
-      setMessage("Error: " + error.response?.data?.msg || "Something went wrong.");
+      // Log the error to inspect the response structure
+      console.log('Error response:', error.response);
+  
+      // Display error from the server, or a default message
+      if (error.response && error.response.data && error.response.data.detail) {
+        setMessage(error.response.data.detail);
+      } else {
+        setMessage("Something went wrong. Please try again.");
+      }
+  
       console.error("Login error:", error);
     }
   };
@@ -42,6 +73,7 @@ export default function Login() {
     <View style={styles.container}>
       <Text style={styles.title}>CrimeWatch</Text>
 
+      {/* Display error or success message */}
       {message && <Text style={styles.message}>{message}</Text>}
 
       <View style={styles.form}>

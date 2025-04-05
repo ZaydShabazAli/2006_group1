@@ -1,33 +1,35 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignUp() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState(''); // State for the phone number input
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState(''); // Added state to store success or error messages
+  const [message, setMessage] = useState('');
   const [isWeakPassword, setIsWeakPassword] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); 
 
-  // Function to validate email format
   const isValidEmail = (email: string) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailRegex.test(email);
   };
-  // Function to check password strength
+
   const checkPasswordStrength = () => {
     let isWeak = false;
 
-    // Ensure password exists and perform strength checks
     if (!password || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*/]/.test(password)) {
       isWeak = true;
     }
     setIsWeakPassword(isWeak);
     return isWeak;
   };
+
   const handleSignUp = async (e: any) => {
     e.preventDefault();
     if (!name || !email || !phone || !password || !confirmPassword) {
@@ -53,23 +55,50 @@ export default function SignUp() {
     }
 
     try {
-      const response = await axios.post("http://192.168.0.101:3001/api/users/signup", {
-        name,
-        email,
-        phone,
-        password,
-      },{
-        headers: {
-          'Content-Type': 'application/json',  // <-- Ensure correct header
+      type CheckUserResponse = {
+        exists: boolean;
+      };
+      type SignUpResponse = {
+        msg: string;
+      };      
+      const checkUserResponse = await axios.post<CheckUserResponse>(
+        "http://192.168.0.102:8000/api/users/check",
+        {
+          email,
+          phone,
+        }
+      );
+  
+      if (checkUserResponse.data.exists) {
+        alert('User already exists with this email or phone number.');
+        return;
+      }
+      const response = await axios.post<{ msg: string; token: string }>(
+        "http://192.168.0.102:8000/api/users/signup",
+        {
+          name,
+          email,
+          phone,
+          password,
         },
-      });
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
 
-      // Success message after successful sign-up
-      setMessage(response.data.msg); // Displaying success message from API
+      // Store the token in AsyncStorage
+      const { token } = response.data;
+      await AsyncStorage.setItem('userToken', token);
+      
+
+      setMessage(response.data.msg);
       alert(`Sign-up successful for ${name}!`);
-      router.replace('/(tabs)'); // Redirect to login after sign-up
+      router.replace('/(tabs)');
     } catch (error: any) {
-      setMessage("Error: " + error.response?.data?.msg || "Something went wrong.");
+      const errorMsg = error.response?.data?.msg || "Something went wrong.";
+      setMessage(String(errorMsg));
       console.error("Sign-up error:", error);
     }
   };
@@ -77,7 +106,7 @@ export default function SignUp() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{name ? `Hello, ${name}!` : 'Sign Up'}</Text>
-      {message && <Text style={styles.message}>{message}</Text>} {/* Display message here */}
+      {message && <Text style={styles.message}>{message}</Text>} 
 
       <View style={styles.form}>
         <TextInput
@@ -103,24 +132,37 @@ export default function SignUp() {
           placeholderTextColor="#888"
           value={phone}
           onChangeText={setPhone}
-          keyboardType="phone-pad" // Use phone-pad keyboard for numeric input
+          keyboardType="phone-pad"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#888"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor="#888"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
+        
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#888"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!passwordVisible}
+          />
+          <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+            <Text style={styles.toggleText}>{passwordVisible ? 'Hide' : 'Show'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            placeholderTextColor="#888"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!confirmPasswordVisible}
+          />
+          <TouchableOpacity onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}>
+            <Text style={styles.toggleText}>{confirmPasswordVisible ? 'Hide' : 'Show'}</Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity style={styles.button} onPress={handleSignUp}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
@@ -158,6 +200,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleText: {
+    color: '#007AFF',
+    fontSize: 14,
+    marginLeft: 10,
+  },
   button: {
     height: 50,
     backgroundColor: '#007AFF',
@@ -182,6 +233,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     fontSize: 14,
     marginBottom: 16,
-    color: 'red', // Color for error message, change to green for success
+    color: 'red',
   }
 });
