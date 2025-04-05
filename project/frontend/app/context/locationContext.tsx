@@ -4,7 +4,7 @@ import * as Location from 'expo-location'; // Import expo-location
 // Define the context with default values
 export const LocationContext = createContext<{
   location: { latitude: number; longitude: number; name: string } | null;
-  setLocation: React.Dispatch<React.SetStateAction<{ latitude: number; longitude; number; name: string } | null>>;
+  setLocation: React.Dispatch<React.SetStateAction<{ latitude: number; longitude: number; name: string } | null>>;
 }>({
   location: null,
   setLocation: () => {},
