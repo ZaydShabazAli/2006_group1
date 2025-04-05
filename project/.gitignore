@@ -29,3 +29,6 @@ yarn-error.*
 .env
 **/.env
 .env*.local
+
+#Backend Data
+backend/data/
