@@ -9,7 +9,8 @@ import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty';
 import RobberyIcon from '../../assets/crime_icons/robbery';
 import OthersIcon from '../../assets/crime_icons/others';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const ip = "192.168.0.103";
+const api = process.env.EXPO_PUBLIC_API_URL;
+
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -45,7 +46,7 @@ const handleConfirmPress = async () => {
       }
   
   const response = await axios.get<{ email: string }>(
-    `http://${ip}:8000/api/users/email`,
+    `${api}/api/users/email`,
     {
       headers: {
                 'Authorization': `Bearer ${token}`, // Ensure token is dynamically retrieved
@@ -85,7 +86,7 @@ const handleConfirmPress = async () => {
                 'Content-Type': 'application/json',
             };
             console.log('Headers being sent:', headers);
-            await axios.post(`http://${ip}:8000/api/crime-report`, payload, { headers });
+            await axios.post(`${api}/api/crime-report`, payload, { headers });
             alert('Crime report submitted successfully!');
         } catch (error) {
             console.log('Error submitting crime report:', error);
@@ -100,10 +101,11 @@ const fetchNearestStation = async () => {
   if (!location) return;
 
   try {
-    const response = await axios.post(`http://${ip}:8000/api/location/nearest`, {
+    const response = await axios.post(`${api}/api/location/nearest`, {
       latitude: location.latitude,
       longitude: location.longitude,
     });
+    
 
     setNearestStation(response.data);
   } catch (error) {
