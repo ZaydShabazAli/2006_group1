@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
 import { MapPin, ShieldPlus, ChevronLeft } from 'lucide-react-native';
@@ -21,6 +21,14 @@ export default function ReportScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
   const [message, setMessage] = useState<string | object>('');
+  const [nearestStation, setNearestStation] = useState<{ name: string; travel_distance_km: number; travel_time_min: number } | null>(null);
+
+  useEffect(() => {
+    if (location) {
+      fetchNearestStation();
+    }
+  }, [location]);  
+
   const buttons = [
     { id: '1', title: 'Outrage of Modesty', icon: <OutrageOFModestyIcon size={70} color="#fff" />, color: '#F44336' },
     { id: '2', title: 'Snatch Theft', icon: <TheftIcon size={60} color="#fff" />, color: '#4CAF50' },
@@ -88,6 +96,22 @@ const handleConfirmPress = async () => {
     }
 };
 
+const fetchNearestStation = async () => {
+  if (!location) return;
+
+  try {
+    const response = await axios.post(`http://${ip}:8000/api/location/nearest`, {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
+
+    setNearestStation(response.data);
+  } catch (error) {
+    console.error("Error fetching nearest police station:", error);
+  }
+};
+
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -131,13 +155,13 @@ const handleConfirmPress = async () => {
             <ShieldPlus size={32} color="#007AFF" style={styles.icon} />
             <View style={{ flex: 1 }}> 
               <Text style={styles.locationTitle}>Nearest Police Station:</Text>
-              <Text
-                style={styles.locationText}
-                numberOfLines={1} // Limit the text to one line
-                ellipsizeMode="tail" // Add "..." at the end if the text overflows
-              >
-                123 Main Street, Singapore
-              </Text>
+              {nearestStation ? (
+                <Text style={styles.locationText}>
+                  {nearestStation.name} ({nearestStation.travel_distance_km.toFixed(2)} km, ~{Math.round(nearestStation.travel_time_min)} mins away)
+                </Text>
+              ) : (
+                <Text style={styles.locationText}>Finding nearest station...</Text>
+              )}
             </View>
           </View>
         </View>

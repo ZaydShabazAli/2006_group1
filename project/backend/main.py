@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from routes import user_routes, feedback_routes, crime_report_routes  # Importing the user and feedback routes
+from routes import user_routes, feedback_routes, crime_report_routes, location_routes  # Importing routes
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,10 +23,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register the user and feedback routes
+# Register the routes
 app.include_router(user_routes.router)
 app.include_router(feedback_routes.router)
 app.include_router(crime_report_routes.router)
+app.include_router(location_routes.router)
 # Getting the port from environment variables or defaulting to 3001
 port = os.getenv("PORT", 8000)
 
