@@ -8,9 +8,10 @@ import TheftIcon from '../../assets/crime_icons/theft';
 import OutrageOFModestyIcon from '../../assets/crime_icons/outrage_of_modesty';
 import RobberyIcon from '../../assets/crime_icons/robbery';
 import OthersIcon from '../../assets/crime_icons/others';
+import TheftOfMotorVehicleIcon from '../../assets/crime_icons/theft_of_motor_vehicle';
+import HousebreakingIcon from '../../assets/crime_icons/housebreaking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const api = process.env.EXPO_PUBLIC_API_URL;
-
+const ip = "10.91.169.195";
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -28,14 +29,35 @@ export default function ReportScreen() {
     if (location) {
       fetchNearestStation();
     }
-  }, [location]);  
+  }, [location]);
 
   const buttons = [
     { id: '1', title: 'Outrage of Modesty', icon: <OutrageOFModestyIcon size={70} color="#fff" />, color: '#F44336' },
     { id: '2', title: 'Snatch Theft', icon: <TheftIcon size={60} color="#fff" />, color: '#4CAF50' },
     { id: '3', title: 'Robbery', icon: <RobberyIcon size={60} color="#fff" />, color: '#2196F3' },
     { id: '4', title: 'Others', icon: <OthersIcon size={60} color="#fff" />, color: '#00BCD4' },
+    { id: '5', title: 'Theft of Motor Vehicle', icon: <TheftOfMotorVehicleIcon size={70} color="#fff" />, color: '#AC54B4' },
+    { id: '6', title: 'Housebreaking', icon: <HousebreakingIcon size={85} color="#fff" />, color: '#F26B38' },
   ];
+
+  const fetchNearestStation = async () => {
+    if (!location) return;
+  
+    try {
+      const response = await axios.get(`http://${ip}:8000/api/location/nearest`, {
+        params: {
+          lat: location.latitude,
+          lon: location.longitude,
+        },
+      });
+  
+      console.log("✅ Nearest station response:", response.data);
+  
+      setNearestStation(response.data.nearest_station);
+    } catch (error) {
+      console.error("❌ Error fetching nearest police station:", error);
+    }
+  };
 
 const handleConfirmPress = async () => {
   const fetchEmail = async () => {
@@ -46,7 +68,7 @@ const handleConfirmPress = async () => {
       }
   
   const response = await axios.get<{ email: string }>(
-    `${api}/api/users/email`,
+    `http://${ip}:8000/api/users/email`,
     {
       headers: {
                 'Authorization': `Bearer ${token}`, // Ensure token is dynamically retrieved
@@ -75,6 +97,7 @@ const handleConfirmPress = async () => {
                 email: userEmail, // Replace with actual user email
                 latitude: location.latitude,
                 longitude: location.longitude,
+                police_station: nearestStation ? nearestStation.name : 'Unknown',
             };
             console.log('Payload being sent:', payload);
             const token = await AsyncStorage.getItem('userToken');
@@ -86,7 +109,7 @@ const handleConfirmPress = async () => {
                 'Content-Type': 'application/json',
             };
             console.log('Headers being sent:', headers);
-            await axios.post(`${api}/api/crime-report`, payload, { headers });
+            await axios.post(`http://${ip}:8000/api/crime-report`, payload, { headers });
             alert('Crime report submitted successfully!');
         } catch (error) {
             console.log('Error submitting crime report:', error);
@@ -96,26 +119,6 @@ const handleConfirmPress = async () => {
         alert('Location or selected button data is not available.');
     }
 };
-
-const fetchNearestStation = async () => {
-  if (!location) return;
-
-  try {
-    const response = await axios.get(`${api}/api/location/nearest-station`, {
-      params: {
-        lat: location.latitude,
-        lon: location.longitude,
-      },
-    });
-
-    console.log("✅ Nearest station response:", response.data);
-
-    setNearestStation(response.data.nearest_station);
-  } catch (error) {
-    console.error("❌ Error fetching nearest police station:", error);
-  }
-};
-
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -160,13 +163,17 @@ const fetchNearestStation = async () => {
             <ShieldPlus size={32} color="#007AFF" style={styles.icon} />
             <View style={{ flex: 1 }}> 
               <Text style={styles.locationTitle}>Nearest Police Station:</Text>
-              {nearestStation ? (
-                <Text style={styles.locationText}>
-                  {nearestStation.name} ({nearestStation.travel_distance_km.toFixed(2)} km, ~{Math.round(nearestStation.travel_time_min)} mins away)
-                </Text>
-              ) : (
-                <Text style={styles.locationText}>Finding nearest station...</Text>
-              )}
+                {nearestStation ? (
+                  <Text style={styles.locationText}>
+                    {nearestStation.name} (
+                    {nearestStation.travel_distance_km !== undefined
+                      ? `${nearestStation.travel_distance_km.toFixed(2)} km`
+                      : 'Distance unavailable'}
+                    , ~{Math.round(nearestStation.travel_time_min)} mins away)
+                  </Text>
+                ) : (
+                  <Text style={styles.locationText}>Finding nearest station...</Text>
+                )}
             </View>
           </View>
         </View>
@@ -205,14 +212,8 @@ const fetchNearestStation = async () => {
                 : 'Fetching location...'}
             </Text>
             <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
-            <Text style={styles.reportHeading}>
-              {nearestStation?.name || "Fetching police station..."}
-            </Text>
-            <Text style={styles.reportSubheading}>
-              {nearestStation
-                ? `${nearestStation.travel_distance_km.toFixed(2)} km, ~${Math.round(nearestStation.travel_time_min)} mins away`
-                : ""}
-            </Text>
+            <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
+            <Text style={styles.reportSubheading}>Approx distance away</Text>
           </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>

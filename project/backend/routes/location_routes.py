@@ -3,7 +3,7 @@ from controllers.location_controller import get_nearest_location
 
 router = APIRouter()
 
-@router.get("/nearest-station/")
+@router.get("/api/location/nearest")
 def nearest_station(lat: float, lon: float):
     try:
         nearest = get_nearest_location(lat, lon)

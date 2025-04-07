@@ -1,45 +1,64 @@
-import { View, Text, FlatList, StyleSheet, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
-import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the search icon
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const dummyHistory = [
-  { id: '1', type: 'Theft', location: 'Orchard Road', time: '2 hours ago' },
-  { id: '2', type: 'Vandalism', location: 'Marina Bay', time: '5 hours ago' },
-];
+type Report = {
+  crime_type: string;
+  location: string;
+  created_at: string;
+};
+
+const ip = "10.91.169.195";
 
 export default function AlertsScreen() {
-  const [searchQuery, setSearchQuery] = React.useState('');
 
-  const filteredAlerts = dummyHistory.filter((alert) =>
-    alert.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    alert.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        if (!token) return;
+
+        const response = await axios.get<Report[]>(`http://${ip}:8000/api/history`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setReports(response.data);
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>History</Text>
-      <View style={styles.searchBarContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search..."
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          data={reports}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.alertCard}>
+              <Text style={styles.alertType}>{item.crime_type}</Text>
+              <Text style={styles.alertLocation}>{item.location}</Text>
+              <Text style={styles.alertTime}>{item.created_at}</Text>
+            </View>
+          )}
         />
-      </View>
-      <FlatList
-        data={filteredAlerts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.alertCard}>
-            <Text style={styles.alertType}>{item.type}</Text>
-            <Text style={styles.alertLocation}>{item.location}</Text>
-            <Text style={styles.alertTime}>{item.time}</Text>
-          </View>
-        )}
-      />
+      )}
     </SafeAreaView>
   );
 }
@@ -54,22 +73,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     fontSize: 24,
     marginBottom: 16,
-  },
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: 16,
-    elevation: 2, // For Android shadow
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchBar: {
-    flex: 1,
-    height: 40,
   },
   alertCard: {
     backgroundColor: '#f8f9fa',

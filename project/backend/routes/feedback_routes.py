@@ -1,15 +1,10 @@
 from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel, EmailStr
 from config.db import get_db_connection  # Ensure this imports your database connection logic
+from models.feedback_model import FeedbackRequest  # Ensure this imports your Pydantic model for feedback
 import jwt
 import os
 
 router = APIRouter()
-
-class FeedbackRequest(BaseModel):
-    email: EmailStr
-    rating: int
-    message: str
 
 @router.post("/api/feedback")
 async def submit_feedback(

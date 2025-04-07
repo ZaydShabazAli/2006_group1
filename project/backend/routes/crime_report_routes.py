@@ -1,16 +1,11 @@
 from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel, EmailStr
 from config.db import get_db_connection
+from models.crime_report_model import CrimeReportRequest  # Ensure this imports your Pydantic model for crime report
 import jwt
 import os
 router = APIRouter()
 
-class CrimeReportRequest(BaseModel):
-    crime_type: str
-    location: str
-    email: EmailStr
-    latitude: float
-    longitude: float
+
 
 @router.post("/api/crime-report")
 async def submit_crime_report(
@@ -51,10 +46,10 @@ async def submit_crime_report(
         # Insert crime report into the database
         cursor.execute(
             """
-            INSERT INTO reports (crime_type, location, email, latitude, longitude)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO reports (crime_type, location, email, latitude, longitude, police_station)
+            VALUES (%s, %s, %s, %s, %s, %s)
             """,
-            (report.crime_type, report.location, report.email, report.latitude, report.longitude)
+            (report.crime_type, report.location, report.email, report.latitude, report.longitude, report.police_station)
         )
         connection.commit()
 

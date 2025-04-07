@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCATION_FILE = os.path.join(BASE_DIR, '../data/SingaporePoliceForceEstablishments2018GEOJSON.geojson')
 
-load_dotenv();
+load_dotenv()
 
 #Load environment variables from .env file
 API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
@@ -105,8 +105,3 @@ def get_nearest_location(user_lat, user_lon):
 
     sorted_results = sorted(results, key=lambda x: x["distance"])
     return sorted_results[0]
-
-
-
-
-    

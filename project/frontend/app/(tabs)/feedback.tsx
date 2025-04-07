@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
-const ip = "192.168.0.103";
+const ip = "10.91.169.195";
 
 export default function FeedbackScreen() {
   const [comment, setComment] = useState('');
