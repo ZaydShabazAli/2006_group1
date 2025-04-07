@@ -11,7 +11,9 @@ import OthersIcon from '../../assets/crime_icons/others';
 import TheftOfMotorVehicleIcon from '../../assets/crime_icons/theft_of_motor_vehicle';
 import HousebreakingIcon from '../../assets/crime_icons/housebreaking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const ip = "10.91.169.195";
+import { IP_ADDRESS } from '@env';
+
+const ip = IP_ADDRESS; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
