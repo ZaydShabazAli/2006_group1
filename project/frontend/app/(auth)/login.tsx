@@ -3,7 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { router } from 'expo-router';
 import axios from 'axios'; // Import axios for HTTP requests
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const ip = "10.91.169.195"; 
+import { IP_ADDRESS } from '@env';
+
+const ip = IP_ADDRESS; 
 
 type CheckUserResponse = {
   exists: boolean;

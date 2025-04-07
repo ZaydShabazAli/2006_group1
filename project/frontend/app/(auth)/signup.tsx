@@ -3,7 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { router } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const ip = "10.91.169.195"; 
+import { IP_ADDRESS } from '@env';
+
+const ip = IP_ADDRESS; 
 
 export default function SignUp() {
   const [name, setName] = useState('');

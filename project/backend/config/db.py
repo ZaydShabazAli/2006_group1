@@ -10,10 +10,10 @@ load_dotenv()
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
-            host=os.getenv("DB_HOST", "localhost"),  # Default to localhost
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASS", ""),
-            database=os.getenv("DB_NAME", "policeapp_users")
+            host=os.getenv("DB_HOST"),  # Default to localhost
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
         )
         
         if connection.is_connected():

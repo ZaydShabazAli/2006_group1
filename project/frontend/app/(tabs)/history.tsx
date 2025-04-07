@@ -4,14 +4,16 @@ import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { IP_ADDRESS } from '@env';
 
+const ip = IP_ADDRESS; 
 type Report = {
   crime_type: string;
   location: string;
   created_at: string;
 };
 
-const ip = "10.91.169.195";
+
 
 export default function AlertsScreen() {
 
