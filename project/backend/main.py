@@ -27,7 +27,8 @@ app.add_middleware(
 app.include_router(user_routes.router)
 app.include_router(feedback_routes.router)
 app.include_router(crime_report_routes.router)
-app.include_router(location_routes.router)
+app.include_router(location_routes.router, prefix="/api/location")
+
 # Getting the port from environment variables or defaulting to 3001
 port = os.getenv("PORT", 8000)
 

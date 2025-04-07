@@ -9,4 +9,5 @@ def nearest_station(lat: float, lon: float):
         nearest = get_nearest_location(lat, lon)
         return {"nearest_station": nearest}
     except Exception as e:
+        print("🔥 ERROR in nearest_station:", str(e))
         raise HTTPException(status_code=500, detail=str(e))

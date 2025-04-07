@@ -101,15 +101,18 @@ const fetchNearestStation = async () => {
   if (!location) return;
 
   try {
-    const response = await axios.post(`${api}/api/location/nearest`, {
-      latitude: location.latitude,
-      longitude: location.longitude,
+    const response = await axios.get(`${api}/api/location/nearest-station`, {
+      params: {
+        lat: location.latitude,
+        lon: location.longitude,
+      },
     });
-    
 
-    setNearestStation(response.data);
+    console.log("✅ Nearest station response:", response.data);
+
+    setNearestStation(response.data.nearest_station);
   } catch (error) {
-    console.error("Error fetching nearest police station:", error);
+    console.error("❌ Error fetching nearest police station:", error);
   }
 };
 
@@ -202,8 +205,14 @@ const fetchNearestStation = async () => {
                 : 'Fetching location...'}
             </Text>
             <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
-            <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
-            <Text style={styles.reportSubheading}>Approx distance away</Text>
+            <Text style={styles.reportHeading}>
+              {nearestStation?.name || "Fetching police station..."}
+            </Text>
+            <Text style={styles.reportSubheading}>
+              {nearestStation
+                ? `${nearestStation.travel_distance_km.toFixed(2)} km, ~${Math.round(nearestStation.travel_time_min)} mins away`
+                : ""}
+            </Text>
           </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>
