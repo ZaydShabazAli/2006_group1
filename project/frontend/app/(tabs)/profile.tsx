@@ -3,7 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-na
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-const ip = "192.168.0.103";
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+
+const ip = "10.91.169.195";
 
 type User = {
   name: string;
@@ -37,9 +40,11 @@ export default function ProfileScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserInfo();
+    }, [])
+  );
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('userToken');
@@ -48,6 +53,10 @@ export default function ProfileScreen() {
 
   const SubmitFeedback = () => {
     router.replace('/(tabs)/feedback');
+  };
+
+  const EditProfile = () => {
+    router.push('/(tabs)/editprofile');
   };
 
   return (
@@ -72,7 +81,7 @@ export default function ProfileScreen() {
           <Text>Failed to load user information.</Text>
         )}
 
-        <TouchableOpacity style={styles.otherButton}>
+        <TouchableOpacity style={styles.otherButton} onPress={EditProfile}>
           <Text style={styles.buttonText}>Edit Profile</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.otherButton} onPress={SubmitFeedback}>

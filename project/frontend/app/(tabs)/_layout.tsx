@@ -41,6 +41,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen name="feedback" options={{ href: null }} />
+      <Tabs.Screen name="editprofile" options={{ href: null }} />
       
     </Tabs>
   );
