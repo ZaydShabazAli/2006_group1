@@ -5,7 +5,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { IP_ADDRESS } from '@env';
 
-const ip = "10.91.169.195"; 
+const ip = "192.168.0.103"; 
 
 export default function SignUp() {
   const [name, setName] = useState('');

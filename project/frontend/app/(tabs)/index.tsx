@@ -12,7 +12,7 @@ import TheftOfMotorVehicleIcon from '../../assets/crime_icons/theft_of_motor_veh
 import HousebreakingIcon from '../../assets/crime_icons/housebreaking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const ip = "10.91.169.195"; 
+const ip = "192.168.0.103"; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -25,6 +25,7 @@ export default function ReportScreen() {
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
   const [message, setMessage] = useState<string | object>('');
   const [nearestStation, setNearestStation] = useState<{ name: string; travel_distance_km: number; travel_time_min: number } | null>(null);
+  const [topCrimes, setTopCrimes] = useState<string[]>([]);
 
   useEffect(() => {
     if (location) {
@@ -41,6 +42,16 @@ export default function ReportScreen() {
     { id: '6', title: 'Housebreaking', icon: <HousebreakingIcon size={85} color="#fff" />, color: '#F26B38' },
   ];
 
+  const normalize = (str: string) => str.trim().toLowerCase();
+
+  const filteredButtons = topCrimes.length > 0
+  ? buttons.filter(btn =>
+      btn.title === "Others" ||  // Always include "Others"
+      topCrimes.some(crime => normalize(crime) === normalize(btn.title))
+    )
+  : buttons;
+
+
   const fetchNearestStation = async () => {
     if (!location) return;
   
@@ -54,11 +65,21 @@ export default function ReportScreen() {
   
       console.log("✅ Nearest station response:", response.data);
   
-      setNearestStation(response.data.nearest_station);
+      const station = response.data.nearest_station;
+      setNearestStation(station);
+  
+      // 👉 Fetch top crimes for the station
+      const rankingResponse = await axios.post(`http://${ip}:8000/get_top_crimes`, {
+        station_name: station.name,
+        divcode: station.divcode,  // Ensure your backend sends this in nearest_station!
+      });
+  
+      setTopCrimes(rankingResponse.data.top_crimes);
+      console.log("🔥 Top crimes:", rankingResponse.data.top_crimes);
     } catch (error) {
-      console.error("❌ Error fetching nearest police station:", error);
+      console.error("❌ Error fetching nearest station or ranking:", error);
     }
-  };
+  };  
 
 const handleConfirmPress = async () => {
   const validateLocation = async () => {
@@ -136,7 +157,7 @@ const handleConfirmPress = async () => {
       <View style={styles.container}>
         <Text style={styles.title}>Lodge a Police Report</Text>
         <FlatList
-          data={buttons}
+          data={filteredButtons}
           numColumns={2}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.gridContainer}

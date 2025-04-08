@@ -83,20 +83,27 @@ def get_nearest_location(user_lat, user_lon):
         lon, lat = location['geometry']['coordinates'][:2]
         distance = haversine(user_lat, user_lon, lat, lon)
 
-        # Extract building name from HTML
+        # Parse HTML description
         desc_html = location['properties'].get('Description', '')
         soup = BeautifulSoup(desc_html, "html.parser")
+
         bldg_name = None
+        divcode = None
 
         for row in soup.find_all("tr"):
-            cells = row.find_all("th")
-            if cells and "BLDG" in cells[0].text:
-                bldg_name = row.find_all("td")[0].text.strip()
-                break
+            th = row.find("th")
+            td = row.find("td")
+            if th and td:
+                label = th.get_text(strip=True)
+                value = td.get_text(strip=True)
+                if label == "BLDG":
+                    bldg_name = value
+                elif label == "DIVCODE":
+                    divcode = value
 
-        # Append formatted result
         results.append({
             "name": bldg_name,
+            "divcode": divcode,
             "latitude": lat,
             "longitude": lon,
             "distance": distance,

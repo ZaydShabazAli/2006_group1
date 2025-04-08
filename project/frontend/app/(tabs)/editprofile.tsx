@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 //import { IP_ADDRESS } from '@env';
 import { useFocusEffect } from '@react-navigation/native';
-const ip = "10.91.169.195";  // replace with your IP
+const ip = "192.168.0.103";  // replace with your IP
 
 export default function EditProfileScreen() {
   const [message, setMessage] = useState<string | object>('');

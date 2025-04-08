@@ -9,7 +9,7 @@ import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 //import { IP_ADDRESS } from '@env';
 
-const ip = "10.91.169.195"; 
+const ip = "192.168.0.103"; 
 
 export default function FeedbackScreen() {
   const [comment, setComment] = useState('');
