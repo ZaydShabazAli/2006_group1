@@ -53,8 +53,35 @@ export default function AlertsScreen() {
     }, [])
   );
 
-  const formatDate = (dateString: string) => {
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
     const date = new Date(dateString);
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    // Less than a minute ago
+    if (diffInSeconds < 60) {
+      return diffInSeconds <= 5 ? 'Just now' : `${diffInSeconds} seconds ago`;
+    }
+    
+    // Less than an hour ago
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
+    
+    // Less than a day ago
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    
+    // Less than a week ago
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+    }
+    
+    // More than a week ago - use the original date format
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -123,7 +150,7 @@ export default function AlertsScreen() {
               <Text style={styles.alertType}>{item.crime_type}</Text>
               <Text style={styles.alertLocation}>{item.location}</Text>
               <Text style={styles.alertLocation}>{item.police_station}</Text>
-              <Text style={styles.alertTime}>{formatDate(item.created_at)}</Text>
+              <Text style={styles.alertTime}>{formatTimeAgo(item.created_at)}</Text>
             </View>
           )}
           ListEmptyComponent={
