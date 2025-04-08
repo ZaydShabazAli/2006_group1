@@ -3,9 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { router } from 'expo-router';
 import axios from 'axios'; // Import axios for HTTP requests
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { IP_ADDRESS } from '@env';
+// import { IP_ADDRESS } from '@env';
 
-const ip = IP_ADDRESS; 
+const ip = "192.168.0.101"; 
 
 type CheckUserResponse = {
   exists: boolean;
@@ -54,22 +54,24 @@ export default function Login() {
       await AsyncStorage.setItem('userToken', token);
       // For now, we're just logging it to the console
       console.log("Login successful, token:", token);
-
+      if (response.data.token) {
+        alert(`Login successful!`);
+        router.replace('/(tabs)');
+        return;
+      }
       // Redirect the user after successful login
-      router.replace('/(tabs)');  // Adjust this to your main screen or home page
+        // Adjust this to your main screen or home page
 
     } catch (error: any) {
       // Log the error to inspect the response structure
       console.log('Error response:', error.response);
-  
-      // Display error from the server, or a default message
-      if (error.response && error.response.data && error.response.data.detail) {
-        setMessage(error.response.data.detail);
+      console.log("Error response detail:", error.response?.data?.detail);
+      if (error.response?.data?.detail === "Server error: 400: Password Incorrect") {
+        alert("Incorrect password. Please try again.");
       } else {
-        setMessage("Something went wrong. Please try again.");
+        alert("Something went wrong. Please try again.");
       }
   
-      console.error("Login error:", error);
     }
   };
 

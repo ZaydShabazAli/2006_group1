@@ -11,9 +11,8 @@ import OthersIcon from '../../assets/crime_icons/others';
 import TheftOfMotorVehicleIcon from '../../assets/crime_icons/theft_of_motor_vehicle';
 import HousebreakingIcon from '../../assets/crime_icons/housebreaking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { IP_ADDRESS } from '@env';
 
-const ip = IP_ADDRESS; 
+const ip = "192.168.0.101"; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -26,6 +25,7 @@ export default function ReportScreen() {
   const [selectedButton, setSelectedButton] = useState<{ title: string; color: string; icon?: JSX.Element } | null>(null);
   const [message, setMessage] = useState<string | object>('');
   const [nearestStation, setNearestStation] = useState<{ name: string; travel_distance_km: number; travel_time_min: number } | null>(null);
+  const [topCrimes, setTopCrimes] = useState<string[]>([]);
 
   useEffect(() => {
     if (location) {
@@ -42,6 +42,23 @@ export default function ReportScreen() {
     { id: '6', title: 'Housebreaking', icon: <HousebreakingIcon size={85} color="#fff" />, color: '#F26B38' },
   ];
 
+  const normalize = (str: string) => str.trim().toLowerCase();
+
+const filteredButtons = topCrimes.length > 0
+  ? [
+      ...topCrimes.map(crime =>
+        buttons.find(btn => normalize(btn.title) === normalize(crime))
+      ).filter((btn): btn is { id: string; title: string; icon: JSX.Element; color: string } => Boolean(btn)), // Map top crimes to buttons and filter out undefined
+      buttons.find(btn => btn.title === "Others")! // Ensure "Others" is always included and non-null
+    ]
+  : [
+      buttons.find(btn => btn.title === "Outrage of Modesty")!,
+      buttons.find(btn => btn.title === "Housebreaking")!,
+      buttons.find(btn => btn.title === "Theft of Motor Vehicle")!,
+      buttons.find(btn => btn.title === "Others")!
+    ];
+
+
   const fetchNearestStation = async () => {
     if (!location) return;
   
@@ -55,13 +72,33 @@ export default function ReportScreen() {
   
       console.log("✅ Nearest station response:", response.data);
   
-      setNearestStation(response.data.nearest_station);
+      const station = response.data.nearest_station;
+      setNearestStation(station);
+  
+      // 👉 Fetch top crimes for the station
+      const rankingResponse = await axios.post(`http://${ip}:8000/get_top_crimes`, {
+        station_name: station.name,
+        divcode: station.divcode,  // Ensure your backend sends this in nearest_station!
+      });
+  
+      setTopCrimes(rankingResponse.data.top_crimes);
+      console.log("🔥 Top crimes:", rankingResponse.data.top_crimes);
     } catch (error) {
-      console.error("❌ Error fetching nearest police station:", error);
+      console.error("❌ Error fetching nearest station or ranking:", error);
+    }
+  };  
+
+const handleConfirmPress = async () => {
+  const validateLocation = async () => {
+    if (!location || location.name === "Unknown Location") {
+      alert("Location is unknown. Please select your location manually from the map.");
+      navigation.navigate('(tabs)', { screen: 'map' });
+      throw new Error("Invalid location.");
     }
   };
 
-const handleConfirmPress = async () => {
+  await validateLocation();
+
   const fetchEmail = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
@@ -127,22 +164,22 @@ const handleConfirmPress = async () => {
       <View style={styles.container}>
         <Text style={styles.title}>Lodge a Police Report</Text>
         <FlatList
-          data={buttons}
+          data={filteredButtons}
           numColumns={2}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.gridContainer}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: item.color }]}
-              onPress={() => {
-                setSelectedButton({ title: item.title, color: item.color, icon: item.icon });
-                setModalVisible(true);
-              }}
-            >
-              <Text style={styles.buttonText}>{item.title}</Text>
-              {item.icon}
-            </TouchableOpacity>
-          )}
+renderItem={({ item }: { item: { id: string; title: string; icon: JSX.Element; color: string } }) => (
+  <TouchableOpacity
+    style={[styles.button, { backgroundColor: item.color }]}
+    onPress={() => {
+      setSelectedButton({ title: item.title, color: item.color, icon: item.icon });
+      setModalVisible(true);
+    }}
+  >
+    <Text style={styles.buttonText}>{item.title}</Text>
+    {item.icon}
+  </TouchableOpacity>
+)}
         />
         <TouchableOpacity
           style={styles.locationContainer}
@@ -215,16 +252,20 @@ const handleConfirmPress = async () => {
             </Text>
             <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
             <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
-            <Text style={styles.reportSubheading}>Approx distance away</Text>
+            <Text style={styles.reportSubheading}>
+            {nearestStation
+                ? `${nearestStation.name}` // Use location from context
+                : 'Fetching location...'}
+            </Text>
           </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>
-<TouchableOpacity
-    style={styles.confirmButton}
-    onPress={handleConfirmPress}
->
-    <Text style={styles.confirmButtonText}>Confirm</Text>
-</TouchableOpacity>
+              <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleConfirmPress}
+              >
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
+              </TouchableOpacity>
           </View>
         </View>
       </Modal>
