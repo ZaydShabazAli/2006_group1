@@ -39,7 +39,7 @@ const LocationInfo = ({ location, nearestStation, onLocationPress }: LocationInf
                 {nearestStation.travel_distance_km !== undefined
                   ? `${nearestStation.travel_distance_km.toFixed(2)} km`
                   : 'Distance unavailable'}
-                , ~{Math.round(nearestStation.travel_time_min)} mins away)
+                , {Math.round(nearestStation.travel_time_min)} mins away)
               </Text>
             ) : (
               <Text style={styles.locationText}>Finding nearest station...</Text>
@@ -53,10 +53,15 @@ const LocationInfo = ({ location, nearestStation, onLocationPress }: LocationInf
 
 const styles = StyleSheet.create({
   locationContainer: {
-    marginTop: 16,
+    marginTop: 20,
     padding: 12,
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   locationRow: {
     flexDirection: 'row',
@@ -64,6 +69,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 12,
+    marginLeft: 4,
   },
   locationTitle: {
     fontSize: 18,

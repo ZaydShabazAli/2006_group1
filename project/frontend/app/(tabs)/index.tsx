@@ -27,6 +27,7 @@ export default function ReportScreen() {
   const [nearestStation, setNearestStation] = useState<NearestStation | null>(null);
   const [topCrimes, setTopCrimes] = useState<string[]>([]);
   const [displayedCrimeTypes, setDisplayedCrimeTypes] = useState(getDefaultCrimeTypes());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (location) {
@@ -41,6 +42,7 @@ export default function ReportScreen() {
   const handleLocationUpdate = async () => {
     if (!location) return;
     
+    setIsLoading(true);
     try {
       const station = await fetchNearestStation(location as LocationType);
       setNearestStation(station);
@@ -51,6 +53,8 @@ export default function ReportScreen() {
       }
     } catch (error) {
       console.error("Error fetching station data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,6 +91,7 @@ export default function ReportScreen() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const userEmail = await fetchUserEmail();
       
@@ -104,13 +109,15 @@ export default function ReportScreen() {
     } catch (error: any) {
       console.error("Error submitting report:", error);
       Alert.alert("Error", error.message || "Failed to submit crime report. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Lodge a Police Report</Text>
+        <Text style={styles.title}>Report a Crime</Text>
         
         <CrimeTypeGrid 
           crimeTypes={displayedCrimeTypes}
@@ -139,16 +146,23 @@ export default function ReportScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F2F2F7', // iOS light gray background
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
+    backgroundColor: '#F2F2F7',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
+    color: '#000000',
+    marginTop: 10,
   },
 });

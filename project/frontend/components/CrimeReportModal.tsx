@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { CrimeType } from '../data/crimeTypes';
 import { Location, NearestStation } from '../services/crimeReportService';
@@ -11,6 +11,7 @@ interface CrimeReportModalProps {
   nearestStation: NearestStation | null;
   onClose: () => void;
   onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 const CrimeReportModal = ({
@@ -19,7 +20,8 @@ const CrimeReportModal = ({
   location,
   nearestStation,
   onClose,
-  onConfirm
+  onConfirm,
+  isLoading
 }: CrimeReportModalProps) => {
   return (
     <Modal
@@ -29,52 +31,58 @@ const CrimeReportModal = ({
       onRequestClose={onClose}
     >
       <View style={[styles.modalContainer, { backgroundColor: selectedCrimeType?.color || '#fff' }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={onClose}
-        >
-          <View style={styles.backButtonContent}>
-            <ChevronLeft size={24} color="#fff" />
-            <Text style={styles.backButtonText}>Back</Text>
-          </View>
-        </TouchableOpacity>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#007AFF" />
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={onClose}
+            >
+              <View style={styles.backButtonContent}>
+                <ChevronLeft size={24} color="#fff" />
+                <Text style={styles.backButtonText}>Back</Text>
+              </View>
+            </TouchableOpacity>
 
-        {selectedCrimeType?.icon && (
-          <View style={styles.modalIcon}>
-            {React.cloneElement(selectedCrimeType.icon, { size: 250 })}
-          </View>
+            {selectedCrimeType?.icon && (
+              <View style={styles.modalIcon}>
+                {React.cloneElement(selectedCrimeType.icon, { size: 250 })}
+              </View>
+            )}
+
+            <Text style={styles.modalTitle}>{selectedCrimeType?.title}</Text>
+            <View style={styles.horizontalLine} /> 
+            <View style={styles.reportDetailsGroup}>
+              <Text style={styles.reportHeading}>
+                {location ? location.name : 'Fetching location...'}
+              </Text>
+              <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
+              <Text style={styles.reportHeading}>
+                {nearestStation ? nearestStation.name : 'Fetching location...'}
+              </Text>
+              {nearestStation ? (
+                <Text style={styles.reportSubheading}>
+                  {nearestStation.travel_distance_km !== undefined
+                    ? `${nearestStation.travel_distance_km.toFixed(2)} km`
+                    : 'Distance unavailable'}
+                  , {Math.round(nearestStation.travel_time_min)} mins away
+                </Text>
+              ) : (
+                <Text style={styles.reportSubheading}>Finding nearest station...</Text>
+              )}
+            </View>
+            <View style={styles.confirmGroup}>
+              <Text style={styles.modalText}>Confirm report?</Text>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={onConfirm}
+              >
+                <Text style={styles.confirmButtonText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
-
-        <Text style={styles.modalTitle}>{selectedCrimeType?.title}</Text>
-        <View style={styles.horizontalLine} /> 
-        <View style={styles.reportDetailsGroup}>
-          <Text style={styles.reportHeading}>
-            {location ? location.name : 'Fetching location...'}
-          </Text>
-          <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
-          <Text style={styles.reportHeading}>
-            {nearestStation ? nearestStation.name : 'Fetching location...'}
-          </Text>
-          {nearestStation ? (
-            <Text style={styles.reportSubheading}>
-              {nearestStation.travel_distance_km !== undefined
-                ? `${nearestStation.travel_distance_km.toFixed(2)} km`
-                : 'Distance unavailable'}
-              , ~{Math.round(nearestStation.travel_time_min)} mins away
-            </Text>
-          ) : (
-            <Text style={styles.reportSubheading}>Finding nearest station...</Text>
-          )}
-        </View>
-        <View style={styles.confirmGroup}>
-          <Text style={styles.modalText}>Confirm report?</Text>
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={onConfirm}
-          >
-            <Text style={styles.confirmButtonText}>Confirm</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </Modal>
   );

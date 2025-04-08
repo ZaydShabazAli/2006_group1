@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
-  KeyboardAvoidingView, Keyboard, TouchableWithoutFeedback, Platform, ScrollView
+  KeyboardAvoidingView, Keyboard, TouchableWithoutFeedback, Platform, ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, FormInput } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
-import { BASE_URL } from '../../constants'; 
+import { BASE_URL } from '../../constants';
 
 export default function EditProfileScreen() {
   const [message, setMessage] = useState<string | object>('');
@@ -20,6 +21,7 @@ export default function EditProfileScreen() {
     current_password: '',
     new_password: ''
   });
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -48,10 +50,10 @@ export default function EditProfileScreen() {
   }, []);
 
   useFocusEffect(
-      React.useCallback(() => {
-        setMessage(''); // Clear the message when the page is revisited
-      }, [])
-    );
+    React.useCallback(() => {
+      setMessage(''); // Clear the message when the page is revisited
+    }, [])
+  );
 
   const handleChange = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
@@ -76,23 +78,23 @@ export default function EditProfileScreen() {
         return;
       }
 
-      if (!form.new_password || form.new_password.length < 8 || form.new_password.length > 15 || 
-          !/[A-Z]/.test(form.new_password) || !/[0-9]/.test(form.new_password) || 
-          !/[!@#$%^&*/]/.test(form.new_password)) {
+      if (!form.new_password || form.new_password.length < 8 || form.new_password.length > 15 ||
+        !/[A-Z]/.test(form.new_password) || !/[0-9]/.test(form.new_password) ||
+        !/[!@#$%^&*/]/.test(form.new_password)) {
         setMessage("New password must be 8-15 characters long, include at least one uppercase letter, one number, and one special character.");
         return;
       }
 
-await axios.put(
-  `${BASE_URL}/api/users/update`,
-  form,
-  {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  }
-);
+      await axios.put(
+        `${BASE_URL}/api/users/update`,
+        form,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       setMessage("Profile updated successfully!");
       alert("Profile updated!");
@@ -104,167 +106,234 @@ await axios.put(
         setMessage("Incorrect current password");
       } else {
         setMessage("Failed to update profile.");
-}
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <SafeAreaView style={styles.container}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.replace('/(tabs)/profile')}
-            disabled={isSubmitting}
-          >
-            <View style={styles.backButtonContent}>
-              <ChevronLeft size={24} color="#24a0ed" />
-              <Text style={styles.backButtonText}>Back</Text>
-            </View>
-          </TouchableOpacity>
-
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.mainContent}>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => router.replace('/(tabs)/profile')}
+                disabled={isSubmitting}
+              >
+                <View style={styles.backButtonContent}>
+                  <ChevronLeft size={20} color="#007AFF" />
+                  <Text style={styles.backButtonText}>Back</Text>
+                </View>
+              </TouchableOpacity>
               <Text style={styles.heading}>Edit Profile</Text>
+              <View style={styles.headerSpacer} />
+            </View>
 
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Feedback Message */}
               {typeof message === 'string' && message ? (
-                <Text style={[styles.messageText, { color: message.includes("success") ? "green" : "red" }]}>
-                  {message}
-                </Text>
+                <View style={styles.messageContainer}>
+                  <Text style={[
+                    styles.messageText,
+                    { color: message.includes("success") ? "#34C759" : "#FF3B30" }
+                  ]}>
+                    {message}
+                  </Text>
+                </View>
               ) : null}
 
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Name:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.name}
-                  onChangeText={(text) => handleChange("name", text)}
-                  editable={!isSubmitting}
-                />
+              {/* Form Card */}
+              <View style={styles.card}>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={form.name}
+                    onChangeText={(text) => handleChange("name", text)}
+                    editable={!isSubmitting}
+                    placeholder="Your full name"
+                  />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Phone</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={form.phone}
+                    onChangeText={(text) => handleChange("phone", text)}
+                    keyboardType="phone-pad"
+                    editable={!isSubmitting}
+                    placeholder="Your phone number"
+                  />
+                </View>
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Phone:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.phone}
-                  onChangeText={(text) => handleChange("phone", text)}
-                  keyboardType="phone-pad"
-                  editable={!isSubmitting}
-                />
+              {/* Password Card */}
+              <View style={styles.card}>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Current Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={form.current_password}
+                    onChangeText={(text) => handleChange("current_password", text)}
+                    secureTextEntry
+                    editable={!isSubmitting}
+                    placeholder="Enter current password"
+                  />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>New Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={form.new_password}
+                    onChangeText={(text) => handleChange("new_password", text)}
+                    secureTextEntry
+                    editable={!isSubmitting}
+                    placeholder="Enter new password"
+                  />
+                  <Text style={styles.passwordHint}>
+                    Must be 8-15 characters with at least one uppercase letter,
+                    one number, and one special character.
+                  </Text>
+                </View>
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Current Password:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.current_password}
-                  onChangeText={(text) => handleChange("current_password", text)}
-                  editable={!isSubmitting}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>New Password:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.new_password}
-                  onChangeText={(text) => handleChange("new_password", text)}
-                  editable={!isSubmitting}
-                />
-              </View>
-
+              {/* Submit Button */}
               <TouchableOpacity
                 style={[styles.submitButton, isSubmitting && styles.disabledButton]}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
               >
-                <Text style={styles.buttonText}>{isSubmitting ? "Saving..." : "Save Changes"}</Text>
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.buttonText}>Save Changes</Text>
+                )}
               </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+            </ScrollView>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F2F2F7', // iOS background color
+  },
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
   },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 5,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  mainContent: {
-    flex: 1,
-    marginTop: 60,
-  },
-  formGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 10,
-    fontWeight: '600',
-    color: '#444',
-  },
-  input: {
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  submitButton: {
-    backgroundColor: '#24a0ed',
-    padding: 16,
-    borderRadius: 8,
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#E5E5EA', 
+    // backgroundColor: '#FFFFFF',
   },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  headerSpacer: {
+    width: 70, // Matches back button width for centered title
   },
   backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 15,
-    zIndex: 10,
+    width: 70,
   },
   backButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   backButtonText: {
-    color: '#24a0ed',
-    fontSize: 16,
-    fontWeight: '500',
+    color: '#007AFF', // iOS blue
+    fontSize: 17,
+    fontWeight: '400',
+  },
+  heading: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  messageContainer: {
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
   },
   messageText: {
     textAlign: 'center',
-    marginBottom: 16,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '400',
   },
-  scrollContent: {
-    flexGrow: 1, // Ensures the content can grow and scroll
-    justifyContent: 'center', // Centers the content vertically
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  formGroup: {
+    padding: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E5EA', // iOS light separator color
+    marginHorizontal: 16,
+  },
+  label: {
+    fontSize: 15,
+    marginBottom: 8,
+    fontWeight: '400',
+    color: '#3C3C43', // iOS label color
+  },
+  input: {
+    fontSize: 17,
+    color: '#000000',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#F2F2F7',
+  },
+  passwordHint: {
+    fontSize: 13,
+    color: '#8E8E93', // iOS secondary label color
+    marginTop: 8,
+  },
+  submitButton: {
+    backgroundColor: '#007AFF', // iOS blue
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  disabledButton: {
+    backgroundColor: '#A2D2FF', // Lighter blue
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '600',
   },
 });
