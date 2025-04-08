@@ -6,7 +6,7 @@ import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
-const ip = "192.168.0.103"; 
+const ip = "192.168.0.101"; 
 type Report = {
   crime_type: string;
   location: string;

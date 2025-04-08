@@ -7,7 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 //import { IP_ADDRESS } from '@env';
 
-const ip = "192.168.0.103"; 
+const ip = "192.168.0.101"; 
 
 type User = {
   name: string;

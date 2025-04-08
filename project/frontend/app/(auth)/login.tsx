@@ -5,7 +5,7 @@ import axios from 'axios'; // Import axios for HTTP requests
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { IP_ADDRESS } from '@env';
 
-const ip = "192.168.0.103"; 
+const ip = "192.168.0.101"; 
 
 type CheckUserResponse = {
   exists: boolean;

@@ -12,7 +12,7 @@ import TheftOfMotorVehicleIcon from '../../assets/crime_icons/theft_of_motor_veh
 import HousebreakingIcon from '../../assets/crime_icons/housebreaking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const ip = "192.168.0.103"; 
+const ip = "192.168.0.101"; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -44,12 +44,19 @@ export default function ReportScreen() {
 
   const normalize = (str: string) => str.trim().toLowerCase();
 
-  const filteredButtons = topCrimes.length > 0
-  ? buttons.filter(btn =>
-      btn.title === "Others" ||  // Always include "Others"
-      topCrimes.some(crime => normalize(crime) === normalize(btn.title))
-    )
-  : buttons;
+const filteredButtons = topCrimes.length > 0
+  ? [
+      ...topCrimes.map(crime =>
+        buttons.find(btn => normalize(btn.title) === normalize(crime))
+      ).filter((btn): btn is { id: string; title: string; icon: JSX.Element; color: string } => Boolean(btn)), // Map top crimes to buttons and filter out undefined
+      buttons.find(btn => btn.title === "Others")! // Ensure "Others" is always included and non-null
+    ]
+  : [
+      buttons.find(btn => btn.title === "Outrage of Modesty")!,
+      buttons.find(btn => btn.title === "Housebreaking")!,
+      buttons.find(btn => btn.title === "Theft of Motor Vehicle")!,
+      buttons.find(btn => btn.title === "Others")!
+    ];
 
 
   const fetchNearestStation = async () => {
@@ -161,18 +168,18 @@ const handleConfirmPress = async () => {
           numColumns={2}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.gridContainer}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: item.color }]}
-              onPress={() => {
-                setSelectedButton({ title: item.title, color: item.color, icon: item.icon });
-                setModalVisible(true);
-              }}
-            >
-              <Text style={styles.buttonText}>{item.title}</Text>
-              {item.icon}
-            </TouchableOpacity>
-          )}
+renderItem={({ item }: { item: { id: string; title: string; icon: JSX.Element; color: string } }) => (
+  <TouchableOpacity
+    style={[styles.button, { backgroundColor: item.color }]}
+    onPress={() => {
+      setSelectedButton({ title: item.title, color: item.color, icon: item.icon });
+      setModalVisible(true);
+    }}
+  >
+    <Text style={styles.buttonText}>{item.title}</Text>
+    {item.icon}
+  </TouchableOpacity>
+)}
         />
         <TouchableOpacity
           style={styles.locationContainer}
