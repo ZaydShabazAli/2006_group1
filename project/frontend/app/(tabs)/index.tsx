@@ -106,7 +106,7 @@ const handleConfirmPress = async () => {
       }
   
   const response = await axios.get<{ email: string }>(
-    `http://${ip}:8000/api/users/email`,
+    `${BASE_URL}/api/users/email`,
     {
       headers: {
                 'Authorization': `Bearer ${token}`, // Ensure token is dynamically retrieved
@@ -147,7 +147,7 @@ const handleConfirmPress = async () => {
                 'Content-Type': 'application/json',
             };
             console.log('Headers being sent:', headers);
-            await axios.post(`http://${ip}:8000/api/crime-report`, payload, { headers });
+            await axios.post(`${BASE_URL}/api/crime-report`, payload, { headers });
             alert('Crime report submitted successfully!');
         } catch (error) {
             console.log('Error submitting crime report:', error);
