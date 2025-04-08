@@ -8,7 +8,6 @@ import { ChevronLeft, FormInput } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-//import { IP_ADDRESS } from '@env';
 import { useFocusEffect } from '@react-navigation/native';
 import { BASE_URL } from '../../constants'; 
 
