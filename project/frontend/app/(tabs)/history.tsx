@@ -1,15 +1,16 @@
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { IP_ADDRESS } from '@env';
+import { useFocusEffect } from '@react-navigation/native';
 
-const ip = IP_ADDRESS; 
+const ip = "10.91.169.195"; 
 type Report = {
   crime_type: string;
   location: string;
+  police_station: string;
   created_at: string;
 };
 
@@ -20,28 +21,33 @@ export default function AlertsScreen() {
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const token = await AsyncStorage.getItem('userToken');
-        if (!token) return;
 
-        const response = await axios.get<Report[]>(`http://${ip}:8000/api/history`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setReports(response.data);
-      } catch (error) {
-        console.error("Error fetching reports:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReports();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchReports = async () => {
+        setLoading(true);
+        try {
+          const token = await AsyncStorage.getItem('userToken');
+          if (!token) return;
+  
+          const response = await axios.get<Report[]>(`http://${ip}:8000/api/history`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setReports(response.data);
+        } catch (error) {
+          console.error("Error fetching reports:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchReports();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,6 +62,7 @@ export default function AlertsScreen() {
             <View style={styles.alertCard}>
               <Text style={styles.alertType}>{item.crime_type}</Text>
               <Text style={styles.alertLocation}>{item.location}</Text>
+              <Text style={styles.alertLocation}>{item.police_station}</Text>
               <Text style={styles.alertTime}>{item.created_at}</Text>
             </View>
           )}

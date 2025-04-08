@@ -8,9 +8,9 @@ import { ChevronLeft, FormInput } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { IP_ADDRESS } from '@env';
-
-const ip = IP_ADDRESS;  // replace with your IP
+//import { IP_ADDRESS } from '@env';
+import { useFocusEffect } from '@react-navigation/native';
+const ip = "10.91.169.195";  // replace with your IP
 
 export default function EditProfileScreen() {
   const [message, setMessage] = useState<string | object>('');
@@ -21,7 +21,6 @@ export default function EditProfileScreen() {
     current_password: '',
     new_password: ''
   });
-
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -49,6 +48,12 @@ export default function EditProfileScreen() {
     fetchUserInfo();
   }, []);
 
+  useFocusEffect(
+      React.useCallback(() => {
+        setMessage(''); // Clear the message when the page is revisited
+      }, [])
+    );
+
   const handleChange = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
   };
@@ -62,23 +67,45 @@ export default function EditProfileScreen() {
         return;
       }
 
-      await axios.put(
-        `http://${ip}:8000/api/users/update`,
-        form,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      if (!form.name.trim() || !form.phone.trim()) {
+        setMessage("Name and Phone fields cannot be blank.");
+        return;
+      }
+
+      if (form.phone.length < 8 || form.phone.length > 10) {
+        setMessage("Phone number must be between 8 to 10 digits.");
+        return;
+      }
+
+      if (!form.new_password || form.new_password.length < 8 || form.new_password.length > 15 || 
+          !/[A-Z]/.test(form.new_password) || !/[0-9]/.test(form.new_password) || 
+          !/[!@#$%^&*/]/.test(form.new_password)) {
+        setMessage("New password must be 8-15 characters long, include at least one uppercase letter, one number, and one special character.");
+        return;
+      }
+
+await axios.put(
+  `http://${ip}:8000/api/users/update`,
+  form,
+  {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  }
+);
 
       setMessage("Profile updated successfully!");
       alert("Profile updated!");
       router.replace('/(tabs)/profile');
     } catch (error: any) {
-      console.error("Update failed:", error);
-      setMessage(error.response?.data?.detail || "Failed to update profile.");
+      console.log("Update failed:", error);
+      const errorMessage = error.response?.data?.detail || error.message;
+      if (errorMessage?.toLowerCase().includes("incorrect current password")) {
+        setMessage("Incorrect current password");
+      } else {
+        setMessage("Failed to update profile.");
+}
     } finally {
       setIsSubmitting(false);
     }

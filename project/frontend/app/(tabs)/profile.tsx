@@ -5,9 +5,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
-import { IP_ADDRESS } from '@env';
+//import { IP_ADDRESS } from '@env';
 
-const ip = IP_ADDRESS; 
+const ip = "10.91.169.195"; 
 
 type User = {
   name: string;

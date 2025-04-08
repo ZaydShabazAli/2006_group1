@@ -7,9 +7,9 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
-import { IP_ADDRESS } from '@env';
+//import { IP_ADDRESS } from '@env';
 
-const ip = IP_ADDRESS; 
+const ip = "10.91.169.195"; 
 
 export default function FeedbackScreen() {
   const [comment, setComment] = useState('');
@@ -147,11 +147,11 @@ const handleSubmit = async () => {
           <View style={styles.mainContent}>
             <Text style={styles.heading}>Submit Feedback</Text>
             
-{typeof message === 'string' && message ? (
-  <Text style={[styles.messageText, { color: message.includes('Thank') ? 'green' : 'red' }]}>
-    {message}
-  </Text>
-) : null}
+              {typeof message === 'string' && message ? (
+                <Text style={[styles.messageText, { color: message.includes('Thank') ? 'green' : 'red' }]}>
+                  {message}
+                </Text>
+              ) : null}
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Rating:</Text>

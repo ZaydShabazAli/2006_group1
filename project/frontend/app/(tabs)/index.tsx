@@ -11,9 +11,8 @@ import OthersIcon from '../../assets/crime_icons/others';
 import TheftOfMotorVehicleIcon from '../../assets/crime_icons/theft_of_motor_vehicle';
 import HousebreakingIcon from '../../assets/crime_icons/housebreaking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { IP_ADDRESS } from '@env';
 
-const ip = IP_ADDRESS; 
+const ip = "10.91.169.195"; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -62,6 +61,16 @@ export default function ReportScreen() {
   };
 
 const handleConfirmPress = async () => {
+  const validateLocation = async () => {
+    if (!location || location.name === "Unknown Location") {
+      alert("Location is unknown. Please select your location manually from the map.");
+      navigation.navigate('(tabs)', { screen: 'map' });
+      throw new Error("Invalid location.");
+    }
+  };
+
+  await validateLocation();
+
   const fetchEmail = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
@@ -215,16 +224,20 @@ const handleConfirmPress = async () => {
             </Text>
             <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
             <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
-            <Text style={styles.reportSubheading}>Approx distance away</Text>
+            <Text style={styles.reportSubheading}>
+            {nearestStation
+                ? `${nearestStation.name}` // Use location from context
+                : 'Fetching location...'}
+            </Text>
           </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>
-<TouchableOpacity
-    style={styles.confirmButton}
-    onPress={handleConfirmPress}
->
-    <Text style={styles.confirmButtonText}>Confirm</Text>
-</TouchableOpacity>
+              <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleConfirmPress}
+              >
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
+              </TouchableOpacity>
           </View>
         </View>
       </Modal>

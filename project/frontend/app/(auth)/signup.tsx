@@ -3,9 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { router } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { IP_ADDRESS } from '@env';
+// import { IP_ADDRESS } from '@env';
 
-const ip = IP_ADDRESS; 
+const ip = "10.91.169.195"; 
 
 export default function SignUp() {
   const [name, setName] = useState('');
@@ -26,7 +26,7 @@ export default function SignUp() {
   const checkPasswordStrength = () => {
     let isWeak = false;
 
-    if (!password || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*/]/.test(password)) {
+    if (!password || password.length < 8 || password.length >15 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*/]/.test(password)) {
       isWeak = true;
     }
     setIsWeakPassword(isWeak);
@@ -43,8 +43,8 @@ export default function SignUp() {
       alert('Please enter a valid email address!');
       return;
     }
-    if (phone.length < 8) {
-      alert('Please enter a valid phone number!');
+    if (phone.length < 8 || phone.length > 10) {
+      alert('Phone number must be between 8 and 10 digits!');
       return;
     }
     if (checkPasswordStrength()) {
