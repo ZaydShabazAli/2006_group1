@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 //import { IP_ADDRESS } from '@env';
 import { useFocusEffect } from '@react-navigation/native';
-const ip = "192.168.0.101";  // replace with your IP
+import { BASE_URL } from '../../constants'; 
 
 export default function EditProfileScreen() {
   const [message, setMessage] = useState<string | object>('');
@@ -27,7 +27,7 @@ export default function EditProfileScreen() {
         const token = await AsyncStorage.getItem('userToken');
         if (!token) return;
 
-        const response = await axios.get(`http://${ip}:8000/api/users`, {
+        const response = await axios.get(`${BASE_URL}/api/users`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -85,7 +85,7 @@ export default function EditProfileScreen() {
       }
 
 await axios.put(
-  `http://${ip}:8000/api/users/update`,
+  `${BASE_URL}/api/users/update`,
   form,
   {
     headers: {

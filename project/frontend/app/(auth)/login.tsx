@@ -3,9 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { router } from 'expo-router';
 import axios from 'axios'; // Import axios for HTTP requests
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { IP_ADDRESS } from '@env';
-
-const ip = "192.168.0.101"; 
+import { BASE_URL } from '../../constants';
 
 type CheckUserResponse = {
   exists: boolean;
@@ -28,7 +26,7 @@ export default function Login() {
 
     try {
       const checkUserResponse = await axios.post<CheckUserResponse>(
-        `http://${ip}:8000/api/users/check2`, 
+        `${BASE_URL}/api/users/check2`, 
         { email },
         { timeout: 5000 } // Add timeout
         
@@ -41,7 +39,7 @@ export default function Login() {
       }
       // Send login request to backend
       const response = await axios.post<LoginResponse>(
-        `http://${ip}:8000/api/users/login`,
+        `${BASE_URL}/api/users/login`,
         { email, password },
         { timeout: 5000 }
       );

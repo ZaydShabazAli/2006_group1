@@ -5,9 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
-//import { IP_ADDRESS } from '@env';
-
-const ip = "192.168.0.101"; 
+import { BASE_URL } from '../../constants'; 
 
 type User = {
   name: string;
@@ -26,7 +24,7 @@ export default function ProfileScreen() {
       if (!token) return;
 
       // Make an authenticated API request to get user details
-      const response = await axios.get<User>(`http://${ip}:8000/api/users`, {
+      const response = await axios.get<User>(`${BASE_URL}/api/users`, {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },

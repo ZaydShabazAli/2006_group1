@@ -5,8 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { BASE_URL } from '../../constants'; 
 
-const ip = "192.168.0.101"; 
 type Report = {
   crime_type: string;
   location: string;
@@ -32,7 +32,7 @@ export default function AlertsScreen() {
           const token = await AsyncStorage.getItem('userToken');
           if (!token) return;
   
-          const response = await axios.get<Report[]>(`http://${ip}:8000/api/history`, {
+          const response = await axios.get<Report[]>(`${BASE_URL}/api/history`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
