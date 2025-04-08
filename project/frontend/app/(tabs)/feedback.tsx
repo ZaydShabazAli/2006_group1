@@ -7,9 +7,7 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
-//import { IP_ADDRESS } from '@env';
-
-const ip = "192.168.0.101"; 
+import { BASE_URL } from '../../constants';
 
 export default function FeedbackScreen() {
   const [comment, setComment] = useState('');
@@ -52,7 +50,7 @@ const handleSubmit = async () => {
       }
 
   const response = await axios.get<{ email: string }>(
-    `http://${ip}:8000/api/users/email`,
+    `${BASE_URL}/api/users/email`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -95,7 +93,7 @@ const handleSubmit = async () => {
         }
     
         const response = await axios.post(
-          `http://${ip}:8000/api/feedback`,
+          `${BASE_URL}/api/feedback`,
           {
             email: userEmail,
             rating,

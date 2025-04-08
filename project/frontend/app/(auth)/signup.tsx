@@ -3,9 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { router } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { IP_ADDRESS } from '@env';
-
-const ip = "192.168.0.101"; 
+import { BASE_URL } from '../../constants';
 
 export default function SignUp() {
   const [name, setName] = useState('');
@@ -65,7 +63,7 @@ export default function SignUp() {
         msg: string;
       };      
       const checkUserResponse = await axios.post<CheckUserResponse>(
-        `http://${ip}:8000/api/users/check`,
+        `${BASE_URL}/api/users/check`,
         {
           email,
           phone,
@@ -77,7 +75,7 @@ export default function SignUp() {
         return;
       }
       const response = await axios.post<{ msg: string; token: string }>(
-        `http://${ip}:8000/api/users/signup`,
+        `${BASE_URL}/api/users/signup`,
         {
           name,
           email,

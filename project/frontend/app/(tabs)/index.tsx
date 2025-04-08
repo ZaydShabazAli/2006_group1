@@ -11,8 +11,7 @@ import OthersIcon from '../../assets/crime_icons/others';
 import TheftOfMotorVehicleIcon from '../../assets/crime_icons/theft_of_motor_vehicle';
 import HousebreakingIcon from '../../assets/crime_icons/housebreaking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const ip = "192.168.0.101"; 
+import { BASE_URL } from '../../constants'; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -63,7 +62,7 @@ const filteredButtons = topCrimes.length > 0
     if (!location) return;
   
     try {
-      const response = await axios.get(`http://${ip}:8000/api/location/nearest`, {
+      const response = await axios.get(`${BASE_URL}/api/location/nearest`, {
         params: {
           lat: location.latitude,
           lon: location.longitude,
@@ -76,7 +75,7 @@ const filteredButtons = topCrimes.length > 0
       setNearestStation(station);
   
       // 👉 Fetch top crimes for the station
-      const rankingResponse = await axios.post(`http://${ip}:8000/get_top_crimes`, {
+      const rankingResponse = await axios.post(`${BASE_URL}/get_top_crimes`, {
         station_name: station.name,
         divcode: station.divcode,  // Ensure your backend sends this in nearest_station!
       });
