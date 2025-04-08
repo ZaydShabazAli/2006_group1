@@ -17,19 +17,36 @@ def load_location_data():
     # Load location data from JSON file
     with open(LOCATION_FILE, 'r') as file:
         return json.load(file)
-    
-"""
-def get_nearest_10(user_lat, user_lon):
-    locations = load_location_data()
 
+def get_nearest_5(user_lat, user_lon):
+    locations = load_location_data()
     results = []
 
-    for location in locations["features"]:  # <- fixed
+    for location in locations["features"]:
         lon, lat = location['geometry']['coordinates'][:2]
         distance = haversine(user_lat, user_lon, lat, lon)
 
+        # Parse HTML description
+        desc_html = location['properties'].get('Description', '')
+        soup = BeautifulSoup(desc_html, "html.parser")
+
+        bldg_name = None
+        divcode = None
+
+        for row in soup.find_all("tr"):
+            th = row.find("th")
+            td = row.find("td")
+            if th and td:
+                label = th.get_text(strip=True)
+                value = td.get_text(strip=True)
+                if label == "BLDG":
+                    bldg_name = value
+                elif label == "DIVCODE":
+                    divcode = value
+
         results.append({
-            "name": location['properties'].get('name'),
+            "name": bldg_name,
+            "divcode": divcode,
             "latitude": lat,
             "longitude": lon,
             "distance": distance,
@@ -37,12 +54,12 @@ def get_nearest_10(user_lat, user_lon):
         })
 
     sorted_results = sorted(results, key=lambda x: x["distance"])
-    return sorted_results[:10]
+    return sorted_results[:5]
 
 
 def get_nearest_location(user_lat, user_lon):
-    nearest_locations = get_nearest_10(user_lat, user_lon)
-    
+    nearest_locations = get_nearest_5(user_lat, user_lon)
+
     destinations = [f"{loc['latitude']},{loc['longitude']}" for loc in nearest_locations]
     origins = f"{user_lat},{user_lon}"
 
@@ -73,8 +90,9 @@ def get_nearest_location(user_lat, user_lon):
 
     sorted_by_time = sorted(nearest_locations, key=lambda x: x["travel_time_min"])
     return sorted_by_time[0]
-"""
 
+
+"""
 def get_nearest_location(user_lat, user_lon):
     locations = load_location_data()
     results = []
@@ -112,3 +130,4 @@ def get_nearest_location(user_lat, user_lon):
 
     sorted_results = sorted(results, key=lambda x: x["distance"])
     return sorted_results[0]
+"""
