@@ -186,7 +186,7 @@ renderItem={({ item }: { item: { id: string; title: string; icon: JSX.Element; c
         >
           <View style={styles.locationRow}>
             <MapPin size={32} color="#007AFF" style={styles.icon} />
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.locationTitle}>My Current Location</Text>
               <Text style={styles.locationText}>
                 {location
