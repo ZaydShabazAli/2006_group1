@@ -250,12 +250,21 @@ renderItem={({ item }: { item: { id: string; title: string; icon: JSX.Element; c
                 : 'Fetching location...'}
             </Text>
             <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
-            <Text style={styles.reportHeading}>Police Station Name for Report Filing</Text>
-            <Text style={styles.reportSubheading}>
-            {nearestStation
+            <Text style={styles.reportHeading}>
+              {nearestStation
                 ? `${nearestStation.name}` // Use location from context
                 : 'Fetching location...'}
             </Text>
+            {nearestStation ? (
+            <Text style={styles.reportSubheading}>
+              {nearestStation.travel_distance_km !== undefined
+              ? `${nearestStation.travel_distance_km.toFixed(2)} km`
+              : 'Distance unavailable'}
+              , ~{Math.round(nearestStation.travel_time_min)} mins away
+            </Text>
+            ) : (
+              <Text style={styles.reportSubheading}>Finding nearest station...</Text>
+            )}
           </View>
           <View style={styles.confirmGroup}>
             <Text style={styles.modalText}>Confirm report?</Text>
