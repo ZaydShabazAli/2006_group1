@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
-import MapView, { Marker, MapPressEvent, Callout } from 'react-native-maps';
+import MapView, { Marker, MapPressEvent, Callout, Polyline } from 'react-native-maps';
 import { useLocation } from '../context/locationContext';
 import * as Location from 'expo-location';
 import { policeStationsData } from '../../data/policeStationData';
 import { extractPoliceStationInfo, type PoliceStation } from '../../services/policeDataService';
+import { fetchNearestStation, type NearestStation } from '../../services/crimeReportService';
 
 interface ProcessedPoliceStation {
   name: string;
@@ -20,6 +21,9 @@ export default function MapScreen() {
   const { location, setLocation } = useLocation();
   const mapRef = useRef<MapView>(null);
   const [policeStations, setPoliceStations] = useState<ProcessedPoliceStation[]>([]);
+  const [nearestStation, setNearestStation] = useState<ProcessedPoliceStation | null>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<{latitude: number, longitude: number}[]>([]);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -44,6 +48,60 @@ export default function MapScreen() {
       setPoliceStations(processedStations);
     }
   }, []);
+
+  // Find nearest police station when location changes
+  useEffect(() => {
+    if (location) {
+      findNearestPoliceStation();
+    }
+  }, [location, policeStations]);
+
+  // Update route coordinates when nearest station or location changes
+  useEffect(() => {
+    if (location && nearestStation) {
+      drawRoute();
+    }
+  }, [location, nearestStation]);
+
+  const findNearestPoliceStation = async () => {
+    if (!location || policeStations.length === 0) return;
+    
+    setIsLoadingRoute(true);
+    try {
+      // Use the existing service to fetch the nearest station from the backend
+      const stationData = await fetchNearestStation({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        name: location.name
+      });
+      
+      // Find the matching station in our processed stations array
+      const matchingStation = policeStations.find(station => 
+        station.name.toLowerCase().includes(stationData.name.toLowerCase()) || 
+        stationData.name.toLowerCase().includes(station.name.toLowerCase()
+      ));
+      
+      if (matchingStation) {
+        setNearestStation(matchingStation);
+      } else {
+        console.warn("Couldn't find matching station in local data for:", stationData.name);
+      }
+    } catch (error) {
+      console.error('Error finding nearest police station:', error);
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  };
+
+  const drawRoute = () => {
+    if (!location || !nearestStation) return;
+    
+    // Create direct line between user and nearest station
+    setRouteCoordinates([
+      { latitude: location.latitude, longitude: location.longitude },
+      nearestStation.coordinates
+    ]);
+  };
 
   const handleMapPress = async (event: MapPressEvent) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
@@ -117,28 +175,67 @@ export default function MapScreen() {
           />
         )}
 
-        {policeStations.map((station, index) => (
+        {/* Draw route to nearest police station */}
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="#FF8C00" // Orange color
+            strokeWidth={3}
+            lineDashPattern={[1, 3]} // Dashed line
+          />
+        )}
+
+        {/* Highlight nearest police station */}
+        {nearestStation && (
           <Marker
-            key={index}
-            coordinate={station.coordinates}
-            title={station.name}
-            description={`${station.type} | ${station.tel}`}
-            pinColor="blue"
+            coordinate={nearestStation.coordinates}
+            title={`Nearest Station: ${nearestStation.name}`}
+            description={`${nearestStation.type} | ${nearestStation.tel}`}
+            pinColor="#FFD700" // Gold color to highlight it
             onPress={(e) => {
               e.stopPropagation();
             }}
           >
             <Callout tooltip>
               <View style={styles.callout}>
-                <Text style={styles.calloutTitle}>{station.name}</Text>
+                <Text style={[styles.calloutTitle, {color: '#FF8C00'}]}>
+                  {nearestStation.name} (Nearest)
+                </Text>
                 <View style={styles.calloutDivider} />
                 <Text>
                   <Text style={styles.calloutLabel}>Tel: </Text>
-                  <Text>{station.tel}</Text>
+                  <Text>{nearestStation.tel}</Text>
                 </Text>
               </View>
             </Callout>
           </Marker>
+        )}
+
+        {/* Show all other police stations */}
+        {policeStations.map((station, index) => (
+          nearestStation?.name !== station.name && (
+            <Marker
+              key={index}
+              coordinate={station.coordinates}
+              title={station.name}
+              description={`${station.type} | ${station.tel}`}
+              pinColor="blue"
+              onPress={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <Callout tooltip>
+                <View style={styles.callout}>
+                  <Text style={styles.calloutTitle}>{station.name}</Text>
+                  <View style={styles.calloutDivider} />
+                  <Text>
+                    <Text style={styles.calloutLabel}>Tel: </Text>
+                    <Text>{station.tel}</Text>
+                  </Text>
+                </View>
+              </Callout>
+            </Marker>
+          )
         ))}
       </MapView>
 
@@ -147,11 +244,15 @@ export default function MapScreen() {
         <View style={styles.legendContainer}>
           <View style={styles.legendItem}>
             <View style={[styles.legendMarker, { backgroundColor: 'red' }]} />
-            <Text style={styles.legendText}>Selected Location</Text>
+            <Text style={styles.legendText}>Selected</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendMarker, { backgroundColor: '#FFD700' }]} />
+            <Text style={styles.legendText}>Nearest NPC</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendMarker, { backgroundColor: 'blue' }]} />
-            <Text style={styles.legendText}>Police Station</Text>
+            <Text style={styles.legendText}>Other NPC</Text>
           </View>
         </View>
         
@@ -159,6 +260,12 @@ export default function MapScreen() {
           <Text style={styles.resetButtonText}>↺</Text>
         </TouchableOpacity>
       </View>
+
+      {isLoadingRoute && (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Finding nearest station...</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -213,18 +320,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
     marginBottom: 6,
   },
-  calloutRow: {
-    flexDirection: 'row',
-    marginBottom: 5,
-    alignItems: 'center',
-  },
   calloutLabel: {
     fontWeight: 'bold',
     color: '#555',
   },
-  calloutValue: {
-    flex: 1,
-    color: '#333',
+  loadingContainer: {
+    position: 'absolute',
+    top: 20,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 10,
+    borderRadius: 5,
+  },
+  loadingText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   bottomControlsContainer: {
     position: 'absolute',

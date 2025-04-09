@@ -1,7 +1,13 @@
 import * as React from "react";
 import Svg, { Path, G, Polygon } from "react-native-svg";
 
-const OutrageOFModestyIcon = (props) => {
+interface OutrageOFModestyIconProps {
+  size?: number;
+  color?: string;
+  [key: string]: any; // Allow additional props
+}
+
+const OutrageOFModestyIcon = (props: OutrageOFModestyIconProps) => {
   const { size = 70, color = "#ffffff", ...otherProps } = props; // Default size is 70x70
   return (
     <Svg
