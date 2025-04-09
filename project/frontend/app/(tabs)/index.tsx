@@ -105,8 +105,15 @@ export default function ReportScreen() {
         police_station: nearestStation.name,
       });
 
-      // Construct SMS message
-      const smsMessage = `Crime: ${selectedCrimeType.title} @ ${location.name}`;
+      const smsMessage = `
+      Crime Report Notification
+      -------------------------
+      Type: ${selectedCrimeType.title}
+      Location: ${location.name}
+      Coordinates: ${location.latitude}, ${location.longitude}
+      Reporter Email: ${userEmail}
+      Time: ${new Date().toLocaleString()}
+      `.trim();
 
       await sendSMS(nearestStation.divcode || "UNKNOWN", smsMessage);
 

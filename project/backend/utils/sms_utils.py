@@ -13,12 +13,12 @@ client = Client(account_sid, auth_token)
 # ✅ Your verified Twilio numbers for each division
 DIVCODE_PHONE_MAP = {
     "ALPHA": "+6583057010",
-    "BRAVO": "+6580105420",
-    "CHARLIE": "+6587801774",
-    "DELTA": "+6583968371",
-    "ECHO": "+6581201337",
-    "FOXTROT": "+6581201337",
+    "DELTA": "+6580105420",
+    "ECHO": "+6587801774",
+    "FOXTROT": "+6583968371",
     "GOLF": "+6581201337",
+    "JULIET": "+6581201337",
+    "LIMA": "+6581201337",
 }
 
 def send_sms_by_divcode(divcode: str, message: str) -> str:
