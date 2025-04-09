@@ -1,12 +1,25 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
-import MapView, { Marker, MapPressEvent } from 'react-native-maps';
-import { useLocation } from '../context/locationContext'; // Correct import path
+import MapView, { Marker, MapPressEvent, Callout } from 'react-native-maps';
+import { useLocation } from '../context/locationContext';
 import * as Location from 'expo-location';
+import { policeStationsData } from '../../data/policeStationData';
+import { extractPoliceStationInfo, type PoliceStation } from '../../services/policeDataService';
+
+interface ProcessedPoliceStation {
+  name: string;
+  type: string;
+  tel: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+}
 
 export default function MapScreen() {
-  const { location, setLocation } = useLocation(); // Use location from context
-  const mapRef = useRef<MapView>(null); // Reference to the MapView
+  const { location, setLocation } = useLocation();
+  const mapRef = useRef<MapView>(null);
+  const [policeStations, setPoliceStations] = useState<ProcessedPoliceStation[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -21,8 +34,15 @@ export default function MapScreen() {
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       };
-setLocation({ ...coords, name: 'Unknown Location' }); // Set the user's live location in context
+      setLocation({ ...coords, name: 'Unknown Location' });
     })();
+
+    if (policeStationsData && policeStationsData.features) {
+      const processedStations = policeStationsData.features.map(station =>
+        extractPoliceStationInfo(station as unknown as PoliceStation)
+      );
+      setPoliceStations(processedStations);
+    }
   }, []);
 
   const handleMapPress = async (event: MapPressEvent) => {
@@ -32,11 +52,11 @@ setLocation({ ...coords, name: 'Unknown Location' }); // Set the user's live loc
     try {
       const [address] = await Location.reverseGeocodeAsync(newLocation);
       const locationName = address ? `${address.name}, ${address.city}` : 'Unknown Location';
-setLocation({ ...newLocation, name: locationName }); // Update location with name
+      setLocation({ ...newLocation, name: locationName });
       console.log('New location:', { ...newLocation, name: locationName });
     } catch (error) {
       console.error('Error fetching location name:', error);
-setLocation({ ...newLocation, name: 'Unknown Location' });
+      setLocation({ ...newLocation, name: 'Unknown Location' });
     }
 
     mapRef.current?.animateToRegion({
@@ -52,7 +72,7 @@ setLocation({ ...newLocation, name: 'Unknown Location' });
       Alert.alert('Permission denied', 'Location permission is required to reset location.');
       return;
     }
-  
+
     let currentLocation = await Location.getCurrentPositionAsync({});
     let coords = {
       latitude: currentLocation.coords.latitude,
@@ -62,11 +82,11 @@ setLocation({ ...newLocation, name: 'Unknown Location' });
     try {
       const [address] = await Location.reverseGeocodeAsync(coords);
       const locationName = address ? `${address.name}, ${address.city}` : 'Unknown Location';
-setLocation({ ...coords, name: locationName }); // Update location with name
+      setLocation({ ...coords, name: locationName });
       console.log('Live location:', { ...coords, name: locationName });
     } catch (error) {
       console.error('Error fetching location name:', error);
-setLocation({ ...coords, name: 'Unknown Location' });
+      setLocation({ ...coords, name: 'Unknown Location' });
     }
 
     mapRef.current?.animateToRegion({
@@ -82,7 +102,7 @@ setLocation({ ...coords, name: 'Unknown Location' });
         ref={mapRef}
         style={styles.map}
         initialRegion={{
-          latitude: location?.latitude || 1.3521, // Default to Singapore initially
+          latitude: location?.latitude || 1.3521,
           longitude: location?.longitude || 103.8198,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
@@ -93,8 +113,33 @@ setLocation({ ...coords, name: 'Unknown Location' });
           <Marker
             coordinate={location}
             title="Selected Location"
+            pinColor="red"
           />
         )}
+
+        {policeStations.map((station, index) => (
+          <Marker
+            key={index}
+            coordinate={station.coordinates}
+            title={station.name}
+            description={`${station.type} | ${station.tel}`}
+            pinColor="blue"
+            onPress={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <Callout tooltip>
+              <View style={styles.callout}>
+                <Text style={styles.calloutTitle}>{station.name}</Text>
+                <View style={styles.calloutDivider} />
+                <Text>
+                  <Text style={styles.calloutLabel}>Tel: </Text>
+                  <Text>{station.tel}</Text>
+                </Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
       </MapView>
       <TouchableOpacity style={styles.resetButton} onPress={resetToDefaultLocation}>
         <Text style={styles.resetButtonText}>↺</Text>
@@ -133,5 +178,41 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  callout: {
+    width: 200,
+    padding: 12,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  calloutTitle: {
+    fontWeight: 'bold',
+    marginBottom: 6,
+    fontSize: 14,
+    color: '#0066CC',
+    textAlign: 'center',
+  },
+  calloutDivider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginBottom: 6,
+  },
+  calloutRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+    alignItems: 'center',
+  },
+  calloutLabel: {
+    fontWeight: 'bold',
+    color: '#555',
+  },
+  calloutValue: {
+    flex: 1,
+    color: '#333',
   },
 });
