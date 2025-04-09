@@ -17,6 +17,10 @@ def send_sms(to_number: str, message: str) -> str:
             from_=twilio_number,
             to=to_number
         )
+        print(f"✅ SMS sent to {to_number}")
+        print(f"📬 Message SID: {message.sid}")
+        print(f"📦 Message status: {message.status}")
         return f"Message sent. SID: {message.sid}"
     except Exception as e:
+        print(f"❌ Error sending SMS: {str(e)}")
         return f"Error sending SMS: {str(e)}"

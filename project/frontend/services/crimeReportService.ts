@@ -74,3 +74,10 @@ export const submitCrimeReport = async (report: CrimeReport): Promise<void> => {
   
   await axios.post(`${BASE_URL}/api/crime-report`, report, { headers });
 };
+
+export const sendSMS = async (to: string, message: string): Promise<void> => {
+  await axios.post(`${BASE_URL}/api/send-sms`, {
+    to,
+    message,
+  });
+};

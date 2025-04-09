@@ -12,9 +12,9 @@ import {
   fetchUserEmail, 
   submitCrimeReport,
   NearestStation,
-  Location as LocationType
+  Location as LocactionType,
+  sendSMS,
 } from '../../services/crimeReportService';
-import { BASE_URL } from '../../constants'; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
@@ -104,12 +104,26 @@ export default function ReportScreen() {
         longitude: location.longitude,
         police_station: nearestStation.name,
       });
+
+      // Construct SMS message
+      const smsMessage = `Crime: ${selectedCrimeType.title} @ ${location.name}`;
+
+
+
+      await sendSMS("+6581201337", smsMessage); // Replace with a verified number
+
       
       Alert.alert("Success", "Crime report submitted successfully!");
       setModalVisible(false);
     } catch (error: any) {
       console.error("Error submitting report:", error);
-      Alert.alert("Error", error.message || "Failed to submit crime report. Please try again.");
+
+      if (error.response) {
+        console.error("Backend error response:", error.response.data);
+        Alert.alert("Backend Error", JSON.stringify(error.response.data));
+      } else {
+        Alert.alert("Error", error.message || "Failed to submit crime report. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
