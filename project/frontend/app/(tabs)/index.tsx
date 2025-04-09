@@ -108,11 +108,8 @@ export default function ReportScreen() {
       // Construct SMS message
       const smsMessage = `Crime: ${selectedCrimeType.title} @ ${location.name}`;
 
+      await sendSMS(nearestStation.divcode || "UNKNOWN", smsMessage);
 
-
-      await sendSMS("+6581201337", smsMessage); // Replace with a verified number
-
-      
       Alert.alert("Success", "Crime report submitted successfully!");
       setModalVisible(false);
     } catch (error: any) {

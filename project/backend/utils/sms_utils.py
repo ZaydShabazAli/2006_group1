@@ -10,17 +10,32 @@ twilio_number = os.getenv("TWILIO_PHONE_NUMBER")
 
 client = Client(account_sid, auth_token)
 
-def send_sms(to_number: str, message: str) -> str:
+# ✅ Your verified Twilio numbers for each division
+DIVCODE_PHONE_MAP = {
+    "ALPHA": "+6583057010",
+    "BRAVO": "+6580105420",
+    "CHARLIE": "+6587801774",
+    "DELTA": "+6583968371",
+    "ECHO": "+6581201337",
+    "FOXTROT": "+6581201337",
+    "GOLF": "+6581201337",
+}
+
+def send_sms_by_divcode(divcode: str, message: str) -> str:
     try:
-        message = client.messages.create(
+        to_number = DIVCODE_PHONE_MAP.get(divcode.upper())
+        if not to_number:
+            return f"❌ Unknown division code: {divcode}"
+
+        sent_message = client.messages.create(
             body=message,
-            from_=twilio_number,
-            to=to_number
+            from_=twilio_number,   # always from your Twilio number
+            to=to_number           # different TO number depending on div
         )
+
         print(f"✅ SMS sent to {to_number}")
-        print(f"📬 Message SID: {message.sid}")
-        print(f"📦 Message status: {message.status}")
-        return f"Message sent. SID: {message.sid}"
+        print(f"📬 SID: {sent_message.sid}")
+        return f"✅ Message sent. SID: {sent_message.sid}"
     except Exception as e:
-        print(f"❌ Error sending SMS: {str(e)}")
-        return f"Error sending SMS: {str(e)}"
+        print(f"❌ Error: {str(e)}")
+        return f"❌ Error sending SMS: {str(e)}"
