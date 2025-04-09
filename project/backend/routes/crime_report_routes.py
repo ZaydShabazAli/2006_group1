@@ -46,7 +46,7 @@ async def submit_crime_report(
         # Insert crime report into the database
         cursor.execute(
             """
-            INSERT INTO reports (crime_type, location, email, latitude, longitude, police_station)
+            INSERT INTO crime_reports (crime_type, location, email, latitude, longitude, police_station)
             VALUES (%s, %s, %s, %s, %s, %s)
             """,
             (report.crime_type, report.location, report.email, report.latitude, report.longitude, report.police_station)
