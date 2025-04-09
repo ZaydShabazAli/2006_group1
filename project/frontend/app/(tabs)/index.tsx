@@ -14,6 +14,7 @@ import {
   NearestStation,
   Location as LocationType
 } from '../../services/crimeReportService';
+import { BASE_URL } from '../../constants'; 
 
 type Nav = {
   navigate: (value: string, options?: { screen: string }) => void;
