@@ -1,6 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Modal, 
+  ActivityIndicator,
+  SafeAreaView,
+  StatusBar
+} from 'react-native';
+import { ChevronLeft, Shield } from 'lucide-react-native';
 import { CrimeType } from '../data/crimeTypes';
 import { Location, NearestStation } from '../services/crimeReportService';
 
@@ -14,15 +23,38 @@ interface CrimeReportModalProps {
   isLoading?: boolean;
 }
 
-const CrimeReportModal = ({
+const CrimeReportModal: React.FC<CrimeReportModalProps> = ({
   visible,
   selectedCrimeType,
   location,
   nearestStation,
   onClose,
   onConfirm,
-  isLoading
-}: CrimeReportModalProps) => {
+  isLoading = false
+}) => {
+  // Format the current date for display
+  const formattedDate = new Date().toLocaleString('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  // Helper function to get background colors based on crime type
+  const getColors = () => {
+    const mainColor = selectedCrimeType?.color || '#007AFF';
+    return {
+      background: mainColor,
+      button: '#FFFFFF',
+      buttonText: mainColor,
+      text: '#FFFFFF'
+    };
+  };
+
+  const colors = getColors();
+
   return (
     <Modal
       animationType="slide"
@@ -30,170 +62,199 @@ const CrimeReportModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={[styles.modalContainer, { backgroundColor: selectedCrimeType?.color || '#fff' }]}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {isLoading ? (
-          <ActivityIndicator size="large" color="#007AFF" />
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+            <Text style={styles.loadingText}>Submitting report...</Text>
+          </View>
         ) : (
-          <>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={onClose}
-            >
-              <View style={styles.backButtonContent}>
-                <ChevronLeft size={24} color="#fff" />
-                <Text style={styles.backButtonText}>Back</Text>
-              </View>
-            </TouchableOpacity>
+          <View style={styles.contentContainer}>
+            {/* Header */}
+            <View style={styles.header}>
+            </View>
 
-            {selectedCrimeType?.icon && (
-              <View style={styles.modalIcon}>
-                {React.cloneElement(selectedCrimeType.icon, { size: 250 })}
-              </View>
-            )}
-
-            <Text style={styles.modalTitle}>{selectedCrimeType?.title}</Text>
-            <View style={styles.horizontalLine} /> 
-            <View style={styles.reportDetailsGroup}>
-              <Text style={styles.reportHeading}>
-                {location ? location.name : 'Fetching location...'}
-              </Text>
-              <Text style={styles.reportSubheading}>{new Date().toLocaleString()}</Text>
-              <Text style={styles.reportHeading}>
-                {nearestStation ? nearestStation.name : 'Fetching location...'}
-              </Text>
-              {nearestStation ? (
-                <Text style={styles.reportSubheading}>
-                  {nearestStation.travel_distance_km !== undefined
-                    ? `${nearestStation.travel_distance_km.toFixed(2)} km`
-                    : 'Distance unavailable'}
-                  , {Math.round(nearestStation.travel_time_min)} mins away
-                </Text>
+            {/* Crime Icon and Title */}
+            <View style={styles.iconContainer}>
+              {selectedCrimeType?.icon ? (
+                React.cloneElement(selectedCrimeType.icon, { 
+                  size: 160,
+                  color: "#FFFFFF"
+                })
               ) : (
-                <Text style={styles.reportSubheading}>Finding nearest station...</Text>
+                <Shield size={120} color="#FFFFFF" />
               )}
             </View>
-            <View style={styles.confirmGroup}>
-              <Text style={styles.modalText}>Confirm report?</Text>
+            
+            <Text style={styles.title}>{selectedCrimeType?.title || 'Report Crime'}</Text>
+            
+            <View style={styles.divider} />
+
+            {/* Report Details */}
+            <View style={styles.detailsContainer}>
+              <View style={styles.detailSection}>
+                <Text style={styles.detailLabel}>Location</Text>
+                <Text style={styles.detailValue}>
+                  {location ? location.name : 'Fetching location...'}
+                </Text>
+              </View>
+
+              <View style={styles.detailSection}>
+                <Text style={styles.detailLabel}>Time</Text>
+                <Text style={styles.detailValue}>{formattedDate}</Text>
+              </View>
+
+              <View style={styles.detailSection}>
+                <Text style={styles.detailLabel}>Nearest Police Station</Text>
+                <Text style={styles.detailValue}>
+                  {nearestStation ? nearestStation.name : 'Finding nearest station...'}
+                </Text>
+                {nearestStation && (
+                  <Text style={styles.detailSubvalue}>
+                    {nearestStation.travel_distance_km !== undefined
+                      ? `${nearestStation.travel_distance_km.toFixed(1)} km`
+                      : 'Distance unavailable'}
+                    {' • '}
+                    {Math.round(nearestStation.travel_time_min)} mins away
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            {/* Confirmation Section */}
+            <View style={styles.confirmationContainer}>
+              <Text style={styles.confirmationText}>
+                Confirm this crime report?
+              </Text>
+              
               <TouchableOpacity
-                style={styles.confirmButton}
+                style={[styles.confirmButton, { backgroundColor: colors.button }]}
                 onPress={onConfirm}
+                activeOpacity={0.8}
               >
-                <Text style={styles.confirmButtonText}>Confirm</Text>
+                <Text style={[styles.confirmButtonText, { color: colors.buttonText }]}>
+                  Confirm Report
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={onClose}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
-          </>
+          </View>
         )}
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 20,
+  },
+  header: {
+    height: 44,
+    marginBottom: 20,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
   },
-  modalTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 12,
-  },
-  modalText: {
-    fontSize: 24,
-    color: '#FFD700',
-    marginBottom: 8,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 52,
-    left: 12,
-    padding: 8,
-    borderRadius: 8,
-  },
-  backButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 18,
-  },
-  confirmButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 120,
-    backgroundColor: '#FFD700',
-    borderRadius: 8,
-  },
-  confirmButtonText: {
-    color: '#AA6C39',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  modalIcon: {
-    alignItems: 'center',
-  },
-  confirmGroup: {
-    alignItems: 'center',
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     marginTop: 16,
   },
-  horizontalLine: {
-    height: 1.5,
-    backgroundColor: '#ccc',
-    marginVertical: 8,
-    width: '80%',
-  },
-  reportDetailsGroup: {
+  iconContainer: {
     alignItems: 'center',
-    marginTop: 20,
   },
-  reportHeading: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'center',
+    marginBottom: 16,
   },
-  reportSubheading: {
-    fontSize: 14,
-    color: '#fff',
-    marginBottom: 24,
-    textAlign: 'center',
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginVertical: 20,
+    width: '100%',
   },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
+  detailsContainer: {
+    marginBottom: 30,
+  },
+  detailSection: {
+    marginBottom: 20,
+  },
+  detailLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 6,
+  },
+  detailValue: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  detailSubvalue: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
+  },
+  confirmationContainer: {
+    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: 20,
+  },
+  confirmationText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  confirmButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     borderRadius: 14,
-    padding: 20,
-    width: '90%',
-    alignSelf: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 100,
-    shadowColor: '#000000',
+    // iOS-style shadow
+    shadowColor: 'rgba(0, 0, 0, 0.3)',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  primaryButton: {
-    backgroundColor: '#007AFF',
+  confirmButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#F2F2F7',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: '100%',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 

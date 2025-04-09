@@ -1,5 +1,5 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
-import { useEffect, useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, Modal, Animated } from 'react-native';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
@@ -7,6 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { BASE_URL } from '../../constants'; 
 import { Ionicons } from '@expo/vector-icons';
+import { crimeTypes, normalizeTitle } from '../../data/crimeTypes';
+import { AlertTriangle, Shield } from 'lucide-react-native';
 
 type Report = {
   crime_type: string;
@@ -20,6 +22,10 @@ export default function AlertsScreen() {
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const modalAnimation = useRef(new Animated.Value(300)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
     useCallback(() => {
@@ -35,7 +41,6 @@ export default function AlertsScreen() {
             },
           });
           
-          // Sort reports by created_at in descending order (newest first)
           const sortedReports = [...response.data].sort((a, b) => {
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           });
@@ -58,30 +63,25 @@ export default function AlertsScreen() {
     const date = new Date(dateString);
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     
-    // Less than a minute ago
     if (diffInSeconds < 60) {
       return diffInSeconds <= 5 ? 'Just now' : `${diffInSeconds} seconds ago`;
     }
     
-    // Less than an hour ago
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) {
       return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
     }
     
-    // Less than a day ago
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
       return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
     }
     
-    // Less than a week ago
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) {
       return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
     }
     
-    // More than a week ago - use the original date format
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -114,6 +114,149 @@ export default function AlertsScreen() {
     setFilteredReports(reports);
   };
 
+  const openReportDetails = (report: Report) => {
+    setSelectedReport(report);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    Animated.parallel([
+      Animated.timing(modalAnimation, {
+        toValue: 300,
+        duration: 250,
+        useNativeDriver: true
+      }),
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true
+      })
+    ]).start(() => {
+      setModalVisible(false);
+    });
+  };
+
+  useEffect(() => {
+    if (modalVisible) {
+      modalAnimation.setValue(300); // Reset position
+      overlayOpacity.setValue(0); // Reset opacity
+      
+      Animated.parallel([
+        Animated.spring(modalAnimation, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 80,
+          friction: 12
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true
+        })
+      ]).start();
+    }
+  }, [modalVisible]);
+
+  const ReportDetailsModal = () => {
+    if (!selectedReport) return null;
+    
+    const getCrimeDetails = (crimeTypeName: string) => {
+      const normalizedName = normalizeTitle(crimeTypeName);
+      const crimeType = crimeTypes.find(c => normalizeTitle(c.title) === normalizedName);
+      
+      return {
+        icon: crimeType?.icon ? 
+          React.cloneElement(crimeType.icon, { size: 50, color: "#FFFFFF" }) : 
+          <Shield size={50} color="#FFFFFF" />,
+        color: crimeType?.color || '#007AFF'
+      };
+    };
+    
+    const { icon, color } = getCrimeDetails(selectedReport.crime_type);
+    const reportDate = new Date(selectedReport.created_at);
+    
+    return (
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            { opacity: overlayOpacity }
+          ]}
+        >
+          <TouchableOpacity 
+            style={{ flex: 1, justifyContent: 'flex-end' }} 
+            activeOpacity={1} 
+            onPress={closeModal}
+          >
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                {
+                  transform: [{ translateY: modalAnimation }]
+                }
+              ]}
+            >
+              <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHandle} />
+                  
+                  <View style={[styles.headerBanner, { backgroundColor: color }]}>
+                    <View style={styles.iconCircle}>
+                      {icon}
+                    </View>
+                    <Text style={styles.modalTitle}>{selectedReport.crime_type}</Text>
+                  </View>
+                  
+                  <View style={styles.modalDetails}>
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailLabel}>Date & Time</Text>
+                      <Text style={styles.detailValue}>
+                        {reportDate.toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </Text>
+                      <Text style={styles.detailSubvalue}>
+                        {reportDate.toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailLabel}>Location</Text>
+                      <Text style={styles.detailValue}>{selectedReport.location}</Text>
+                    </View>
+                    
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailLabel}>Police Station</Text>
+                      <Text style={styles.detailValue}>{selectedReport.police_station}</Text>
+                    </View>
+                    
+                    <TouchableOpacity 
+                      style={styles.closeButton}
+                      onPress={closeModal}
+                    >
+                      <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          </TouchableOpacity>
+        </Animated.View>
+      </Modal>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>History</Text>
@@ -139,19 +282,23 @@ export default function AlertsScreen() {
       
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#007AFF" />
         </View>
       ) : (
         <FlatList
           data={filteredReports}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item }) => (
-            <View style={styles.alertCard}>
+            <TouchableOpacity
+              style={styles.alertCard}
+              onPress={() => openReportDetails(item)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.alertType}>{item.crime_type}</Text>
               <Text style={styles.alertLocation}>{item.location}</Text>
-              <Text style={styles.alertLocation}>{item.police_station}</Text>
+              {/* <Text style={styles.alertLocation}>{item.police_station}</Text> */}
               <Text style={styles.alertTime}>{formatTimeAgo(item.created_at)}</Text>
-            </View>
+            </TouchableOpacity>
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -165,6 +312,8 @@ export default function AlertsScreen() {
           }
         />
       )}
+      
+      <ReportDetailsModal />
     </SafeAreaView>
   );
 }
@@ -251,4 +400,86 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+  },
+  modalHandle: {
+    width: 36,
+    height: 5,
+    backgroundColor: '#DADADA',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginVertical: 12,
+  },
+  headerBanner: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  modalDetails: {
+    padding: 20,
+  },
+  detailSection: {
+    marginBottom: 20,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#8E8E93',
+    marginBottom: 6,
+  },
+  detailValue: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#000000',
+  },
+  detailSubvalue: {
+    fontSize: 15,
+    color: '#3C3C43',
+    marginTop: 2,
+  },
+  closeButton: {
+    backgroundColor: '#F2F2F7',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#007AFF',
+  }
 });
