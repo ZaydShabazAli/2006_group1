@@ -103,7 +103,7 @@ export default function SignUp() {
       // Store the token in AsyncStorage
       const { token } = response.data;
       await AsyncStorage.setItem('userToken', token);
-      alert('Sign up successful for');
+      alert(`Sign up successful for ${name}`);
       setMessage(response.data.msg);
       router.replace('/(tabs)');
     } catch (error: any) {

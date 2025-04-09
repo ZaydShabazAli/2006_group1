@@ -60,8 +60,11 @@ export default function AlertsScreen() {
 
   const formatTimeAgo = (dateString: string) => {
     const now = new Date();
+    // Convert input date to Singapore time
     const date = new Date(dateString);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const singaporeDate = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+    
+    const diffInSeconds = Math.floor((now.getTime() - singaporeDate.getTime()) / 1000);
     
     if (diffInSeconds < 60) {
       return diffInSeconds <= 5 ? 'Just now' : `${diffInSeconds} seconds ago`;
@@ -82,7 +85,7 @@ export default function AlertsScreen() {
       return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
     }
     
-    return date.toLocaleDateString('en-US', {
+    return singaporeDate.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -174,6 +177,8 @@ export default function AlertsScreen() {
     
     const { icon, color } = getCrimeDetails(selectedReport.crime_type);
     const reportDate = new Date(selectedReport.created_at);
+    // Convert to Singapore time (UTC+8)
+    const singaporeDate = new Date(reportDate.getTime() + (8 * 60 * 60 * 1000));
     
     return (
       <Modal
@@ -216,7 +221,7 @@ export default function AlertsScreen() {
                     <View style={styles.detailSection}>
                       <Text style={styles.detailLabel}>Date & Time</Text>
                       <Text style={styles.detailValue}>
-                        {reportDate.toLocaleDateString('en-US', {
+                        {singaporeDate.toLocaleDateString('en-US', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
@@ -224,7 +229,7 @@ export default function AlertsScreen() {
                         })}
                       </Text>
                       <Text style={styles.detailSubvalue}>
-                        {reportDate.toLocaleTimeString('en-US', {
+                        {singaporeDate.toLocaleTimeString('en-US', {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
