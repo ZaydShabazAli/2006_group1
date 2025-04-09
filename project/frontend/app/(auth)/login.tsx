@@ -19,6 +19,7 @@ import {
   checkUserExists, 
   loginUser 
 } from '../../services/authService';
+import { useAuth } from '../context/authContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -26,6 +27,7 @@ export default function Login() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     // Clear previous error messages
@@ -48,8 +50,10 @@ export default function Login() {
         return;
       }
       
-      // Attempt to login
-      await loginUser(email, password);
+      // Attempt to login and get token
+      const token = await loginUser(email, password);
+      // Use context login function to set the token
+      await login(token);
       alert('Login successful!');
       // Navigation is handled after successful login
       router.replace('/(tabs)');
