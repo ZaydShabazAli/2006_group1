@@ -42,10 +42,10 @@ async def get_user_reports_by_email(authorization: str = Header(...)):
 
         user_email = user["email"]
 
-        schema_query = "DESCRIBE reports"
+        schema_query = "DESCRIBE crime_reports"
         cursor.execute(schema_query)
         schema = cursor.fetchall()
-        query = "SELECT crime_type, location, police_station, submitted_at  AS created_at FROM reports WHERE email = %s"
+        query = "SELECT crime_type, location, police_station, submitted_at  AS created_at FROM crime_reports WHERE email = %s"
         cursor.execute(query, (user_email,))
         try:
             reports = cursor.fetchall()
