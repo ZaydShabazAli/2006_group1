@@ -12,7 +12,7 @@ import {
   fetchUserEmail, 
   submitCrimeReport,
   NearestStation,
-  Location as LocactionType,
+  Location as LocationType,
   sendSMS,
 } from '../../services/crimeReportService';
 

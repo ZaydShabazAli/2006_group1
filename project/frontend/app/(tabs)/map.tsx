@@ -141,9 +141,24 @@ export default function MapScreen() {
           </Marker>
         ))}
       </MapView>
-      <TouchableOpacity style={styles.resetButton} onPress={resetToDefaultLocation}>
-        <Text style={styles.resetButtonText}>↺</Text>
-      </TouchableOpacity>
+
+      {/* Bottom Controls */}
+      <View style={styles.bottomControlsContainer}>
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendMarker, { backgroundColor: 'red' }]} />
+            <Text style={styles.legendText}>Selected Location</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendMarker, { backgroundColor: 'blue' }]} />
+            <Text style={styles.legendText}>Police Station</Text>
+          </View>
+        </View>
+        
+        <TouchableOpacity style={styles.resetButton} onPress={resetToDefaultLocation}>
+          <Text style={styles.resetButtonText}>↺</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -157,16 +172,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   resetButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
     backgroundColor: '#007AFF',
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -213,6 +224,41 @@ const styles = StyleSheet.create({
   },
   calloutValue: {
     flex: 1,
+    color: '#333',
+  },
+  bottomControlsContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  legendContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 25,
+    padding: 10,
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 6,
+  },
+  legendMarker: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 4,
+  },
+  legendText: {
+    fontSize: 12,
     color: '#333',
   },
 });

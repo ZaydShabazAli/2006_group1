@@ -38,18 +38,19 @@ const LocationInfo = ({ location, nearestStation, onLocationPress }: LocationInf
           <View style={styles.iconContainer}>
             <ShieldPlus size={20} color="#007AFF" />
           </View>
-          <View style={styles.textContainer}> 
+          <View style={styles.textContainer}>
             <Text style={styles.locationTitle}>Nearest Police Station</Text>
-            {nearestStation ? (
+            <Text style={styles.locationText}>
+              {nearestStation ? nearestStation.name : 'Finding nearest station...'}
+            </Text>
+            {nearestStation && (
               <Text style={styles.locationText}>
-                {nearestStation.name} (
                 {nearestStation.travel_distance_km !== undefined
                   ? `${nearestStation.travel_distance_km.toFixed(1)} km`
                   : 'Distance unavailable'}
-                , {Math.round(nearestStation.travel_time_min)} mins away)
-              </Text>
-            ) : (
-              <Text style={styles.locationText}>Finding nearest station...</Text>
+                  {' • '}
+                {Math.round(nearestStation.travel_time_min)} mins away
+            </Text>
             )}
           </View>
         </View>
