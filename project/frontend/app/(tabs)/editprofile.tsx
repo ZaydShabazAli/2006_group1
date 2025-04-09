@@ -119,7 +119,7 @@ export default function EditProfileScreen() {
       );
 
       setMessage("Profile updated successfully!");
-      
+      alert("Profile updated");
       // Clear password fields after successful update
       setForm({
         ...form,

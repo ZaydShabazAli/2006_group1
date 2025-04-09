@@ -50,11 +50,10 @@ export default function Login() {
       
       // Attempt to login
       await loginUser(email, password);
-      
+      alert('Login successful!');
       // Navigation is handled after successful login
       router.replace('/(tabs)');
     } catch (error: any) {
-      console.error('Login error:', error);
       setMessage(error.message);
     } finally {
       setIsLoading(false);
