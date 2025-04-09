@@ -5,7 +5,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -15,6 +15,8 @@ import { BASE_URL } from '../../constants';
 export default function EditProfileScreen() {
   const [message, setMessage] = useState<string | object>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -68,6 +70,7 @@ export default function EditProfileScreen() {
         return;
       }
 
+      // Basic validation for required fields
       if (!form.name.trim() || !form.phone.trim()) {
         setMessage("Name and Phone fields cannot be blank.");
         return;
@@ -78,16 +81,35 @@ export default function EditProfileScreen() {
         return;
       }
 
-      if (!form.new_password || form.new_password.length < 8 || form.new_password.length > 15 ||
-        !/[A-Z]/.test(form.new_password) || !/[0-9]/.test(form.new_password) ||
-        !/[!@#$%^&*/]/.test(form.new_password)) {
-        setMessage("New password must be 8-15 characters long, include at least one uppercase letter, one number, and one special character.");
-        return;
+      // Only validate new password if the user is trying to change it
+      if (form.new_password) {
+        if (form.new_password.length < 8 || form.new_password.length > 15 ||
+            !/[A-Z]/.test(form.new_password) || !/[0-9]/.test(form.new_password) ||
+            !/[!@#$%^&*/]/.test(form.new_password)) {
+          setMessage("New password must be 8-15 characters long, include at least one uppercase letter, one number, and one special character.");
+          return;
+        }
+        
+        // Require current password if setting a new password
+        if (!form.current_password) {
+          setMessage("Current password is required to set a new password.");
+          return;
+        }
       }
+
+      // Prepare data to send - only include password fields if changing password
+      const updateData = {
+        name: form.name,
+        phone: form.phone,
+        ...(form.new_password ? {
+          current_password: form.current_password,
+          new_password: form.new_password
+        } : {})
+      };
 
       await axios.put(
         `${BASE_URL}/api/users/update`,
-        form,
+        updateData,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -97,7 +119,14 @@ export default function EditProfileScreen() {
       );
 
       setMessage("Profile updated successfully!");
-      alert("Profile updated!");
+      
+      // Clear password fields after successful update
+      setForm({
+        ...form,
+        current_password: '',
+        new_password: ''
+      });
+      
       router.replace('/(tabs)/profile');
     } catch (error: any) {
       console.log("Update failed:", error);
@@ -105,7 +134,7 @@ export default function EditProfileScreen() {
       if (errorMessage?.toLowerCase().includes("incorrect current password")) {
         setMessage("Incorrect current password");
       } else {
-        setMessage("Failed to update profile.");
+        setMessage("Failed to update profile: " + errorMessage);
       }
     } finally {
       setIsSubmitting(false);
@@ -184,28 +213,50 @@ export default function EditProfileScreen() {
               <View style={styles.card}>
                 <View style={styles.formGroup}>
                   <Text style={styles.label}>Current Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={form.current_password}
-                    onChangeText={(text) => handleChange("current_password", text)}
-                    secureTextEntry
-                    editable={!isSubmitting}
-                    placeholder="Enter current password"
-                  />
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      value={form.current_password}
+                      onChangeText={(text) => handleChange("current_password", text)}
+                      secureTextEntry={!showCurrentPassword}
+                      editable={!isSubmitting}
+                      placeholder="Enter current password"
+                    />
+                    <TouchableOpacity 
+                      style={styles.eyeIcon}
+                      onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? 
+                        <EyeOff size={20} color="#8E8E93" /> : 
+                        <Eye size={20} color="#8E8E93" />
+                      }
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 <View style={styles.divider} />
 
                 <View style={styles.formGroup}>
                   <Text style={styles.label}>New Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={form.new_password}
-                    onChangeText={(text) => handleChange("new_password", text)}
-                    secureTextEntry
-                    editable={!isSubmitting}
-                    placeholder="Enter new password"
-                  />
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      value={form.new_password}
+                      onChangeText={(text) => handleChange("new_password", text)}
+                      secureTextEntry={!showNewPassword}
+                      editable={!isSubmitting}
+                      placeholder="Enter new password"
+                    />
+                    <TouchableOpacity 
+                      style={styles.eyeIcon}
+                      onPress={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? 
+                        <EyeOff size={20} color="#8E8E93" /> : 
+                        <Eye size={20} color="#8E8E93" />
+                      }
+                    </TouchableOpacity>
+                  </View>
                   <Text style={styles.passwordHint}>
                     Must be 8-15 characters with at least one uppercase letter,
                     one number, and one special character.
@@ -320,6 +371,11 @@ const styles = StyleSheet.create({
     color: '#8E8E93', // iOS secondary label color
     marginTop: 8,
   },
+  togglePasswordText: {
+    fontSize: 15,
+    color: '#007AFF', // iOS blue
+    marginTop: 8,
+  },
   submitButton: {
     backgroundColor: '#007AFF', // iOS blue
     padding: 16,
@@ -335,5 +391,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '600',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F7',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 17,
+    color: '#000000',
+    paddingVertical: 12,
+  },
+  eyeIcon: {
+    marginLeft: 8,
   },
 });
