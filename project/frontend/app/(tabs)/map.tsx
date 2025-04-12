@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     position: 'absolute',
-    top: 20,
+    top: 50,
     alignSelf: 'center',
     backgroundColor: 'rgba(0,0,0,0.7)',
     padding: 10,
